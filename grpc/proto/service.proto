@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+// protoc --proto_path=grpc --go_out=. grpc/proto/service.proto
+// protoc --proto_path=grpc --go-grpc_out=. grpc/proto/service.proto
+
+package proto;
+
+option go_package = "/grpc";
+
+service MyService {
+    rpc SendRandString(stream MyMessage) returns (stream MyMessage) {}
+}
+
+message MyMessage {
+  int32 ServiceID = 1;
+  string message = 2;
+}

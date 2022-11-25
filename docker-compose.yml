@@ -1,0 +1,97 @@
+version: "3.7"
+
+services:
+  app1:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    image: "${APP_IMAGE}:${APP_IMAGE_TAG}"
+    container_name: "${APP_SERVICE}0"
+    environment:
+      APP_PORT_FROM: "${APP_PORT_FROM}"
+      APP_PORT_TO: "${APP_PORT_TO}"
+      APP_PORT: "${APP_PORT}"
+      APP_HOST: "${APP_HOST}"
+      APP_SERVICE: "${APP_SERVICE}"
+      LOG_PATH: "${LOG_PATH}"
+      LOG_NAME: "${LOG_NAME}_0"
+      LOG_EXT: "${LOG_EXT}"
+    ports:
+      - "${APP_PORT}:${APP_PORT}"
+    tty: yes
+
+  app2:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    image: "${APP_IMAGE}:${APP_IMAGE_TAG}"
+    container_name: "${APP_SERVICE}1"
+    environment:
+      APP_PORT_FROM: "${APP_PORT_FROM}"
+      APP_PORT_TO: "${APP_PORT_TO}"
+      APP_PORT: "8201"
+      APP_HOST: "${APP_HOST}"
+      APP_SERVICE: "${APP_SERVICE}"
+      LOG_PATH: "${LOG_PATH}"
+      LOG_NAME: "${LOG_NAME}_1"
+      LOG_EXT: "${LOG_EXT}"
+    ports:
+      - "8201:8201"
+    tty: yes
+
+  app3:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    image: "${APP_IMAGE}:${APP_IMAGE_TAG}"
+    container_name: "${APP_SERVICE}2"
+    environment:
+      APP_PORT_FROM: "${APP_PORT_FROM}"
+      APP_PORT_TO: "${APP_PORT_TO}"
+      APP_PORT: "8202"
+      APP_HOST: "${APP_HOST}"
+      APP_SERVICE: "${APP_SERVICE}"
+      LOG_PATH: "${LOG_PATH}"
+      LOG_NAME: "${LOG_NAME}_2"
+      LOG_EXT: "${LOG_EXT}"
+    ports:
+      - "8202:8202"
+    tty: yes
+
+  app4:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    image: "${APP_IMAGE}:${APP_IMAGE_TAG}"
+    container_name: "${APP_SERVICE}3"
+    environment:
+      APP_PORT_FROM: "${APP_PORT_FROM}"
+      APP_PORT_TO: "${APP_PORT_TO}"
+      APP_PORT: "8203"
+      APP_HOST: "${APP_HOST}"
+      APP_SERVICE: "${APP_SERVICE}"
+      LOG_PATH: "${LOG_PATH}"
+      LOG_NAME: "${LOG_NAME}_3"
+      LOG_EXT: "${LOG_EXT}"
+    ports:
+      - "8203:8203"
+    tty: yes
+
+  app5:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    image: "${APP_IMAGE}:${APP_IMAGE_TAG}"
+    container_name: "${APP_SERVICE}4"
+    environment:
+      APP_PORT_FROM: "${APP_PORT_FROM}"
+      APP_PORT_TO: "${APP_PORT_TO}"
+      APP_PORT: "8204"
+      APP_HOST: "${APP_HOST}"
+      APP_SERVICE: "${APP_SERVICE}"
+      LOG_PATH: "${LOG_PATH}"
+      LOG_NAME: "${LOG_NAME}_4"
+      LOG_EXT: "${LOG_EXT}"
+    ports:
+      - "8204:8204"
+    tty: yes
