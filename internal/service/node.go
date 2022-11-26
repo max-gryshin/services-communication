@@ -36,12 +36,7 @@ func NewNode(id int, portsToLookUp []int, frequency time.Duration, server *serve
 		nf.opts,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-	ch := make(chan struct{})
 	go func() {
-		<-ch
-		defer func() {
-			close(ch)
-		}()
 		wg := sync.WaitGroup{}
 		ticker := time.NewTicker(nf.frequency)
 		count := 0
@@ -106,7 +101,6 @@ func NewNode(id int, portsToLookUp []int, frequency time.Duration, server *serve
 			wg.Wait()
 		}
 	}()
-	ch <- struct{}{}
 
 	return &nf
 }
