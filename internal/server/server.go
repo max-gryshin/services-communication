@@ -97,8 +97,10 @@ func (s *Server) SendRandString(stream mygrpc.MyService_SendRandStringServer) er
 		if err != nil {
 			return err
 		}
-		grpclog.Info("Incoming message " + incomingMessage.Message +
-			" from " + strconv.Itoa(int(incomingMessage.ServiceID)) + " service")
+		incM := "Incoming message " + incomingMessage.Message +
+			" from " + strconv.Itoa(int(incomingMessage.ServiceID)) + " service"
+		grpclog.Info(incM)
+		fmt.Println(incM)
 		for _, randStr := range utils.GetRandStrings() {
 			if err = stream.Send(&mygrpc.MyMessage{
 				ServiceID: int32(s.port),
@@ -106,7 +108,9 @@ func (s *Server) SendRandString(stream mygrpc.MyService_SendRandStringServer) er
 			}); err != nil {
 				return err
 			}
-			grpclog.Info("Outgoing message " + randStr + ", from " + strconv.Itoa(s.port) + " service")
+			outM := "Outgoing message " + randStr + ", from " + strconv.Itoa(s.port) + " service"
+			grpclog.Info(outM)
+			fmt.Println(outM)
 		}
 	}
 

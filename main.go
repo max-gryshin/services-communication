@@ -38,7 +38,7 @@ func main() {
 		defer wg.Done()
 		srv.Serve(port)
 	}()
-	neighbors := service.NewNeighbors(port, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
+	neighbors := service.NewNode(port, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
 	go func() {
 		ticker := time.NewTicker(settings.ServerConfig.FrequencyCommunication)
 		count := 0

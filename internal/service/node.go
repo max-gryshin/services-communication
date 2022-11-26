@@ -6,6 +6,7 @@ import (
 	"fiveServices/internal/grpclog"
 	"fiveServices/internal/server"
 	"fiveServices/internal/utils"
+	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
@@ -14,29 +15,22 @@ import (
 	"time"
 )
 
-type Neighbors struct {
-	serviceID              int
-	portsToLookUp          []int
-	opts                   []grpc.DialOption
-	frequency              time.Duration
-	timeout                time.Duration
-	neighborsToCommunicate map[int]*neighborsSync
-	server                 *server.Server
+type Node struct {
+	serviceID     int
+	portsToLookUp []int
+	opts          []grpc.DialOption
+	frequency     time.Duration
+	timeout       time.Duration
+	server        *server.Server
 }
 
-type neighborsSync struct {
-	isAvailable bool
-	isRunning   bool
-}
-
-func NewNeighbors(id int, portsToLookUp []int, frequency time.Duration, server *server.Server) *Neighbors {
-	nf := Neighbors{
-		serviceID:              id,
-		portsToLookUp:          portsToLookUp,
-		frequency:              frequency,
-		timeout:                time.Second * 1,
-		neighborsToCommunicate: make(map[int]*neighborsSync),
-		server:                 server,
+func NewNode(id int, portsToLookUp []int, frequency time.Duration, server *server.Server) *Node {
+	nf := Node{
+		serviceID:     id,
+		portsToLookUp: portsToLookUp,
+		frequency:     frequency,
+		timeout:       time.Second * 10,
+		server:        server,
 	}
 	nf.opts = append(
 		nf.opts,
@@ -117,46 +111,46 @@ func NewNeighbors(id int, portsToLookUp []int, frequency time.Duration, server *
 	return &nf
 }
 
-func (nf *Neighbors) LookUp() {
-	for port, neighborSync := range nf.server.StatusMap {
-		if neighborSync == mygrpc.HealthCheckResponse_SERVING || strconv.Itoa(nf.serviceID) == port {
+func (n *Node) LookUp() {
+	for port, neighborSync := range n.server.StatusMap {
+		if neighborSync == mygrpc.HealthCheckResponse_SERVING || strconv.Itoa(n.serviceID) == port {
 			continue
 		}
 		p := port
 		go func(port string) {
-			conn, err := grpc.Dial(utils.GetServiceName(port), nf.opts...)
+			conn, err := grpc.Dial(utils.GetServiceName(port), n.opts...)
 			if err != nil {
 				grpclog.Error("fail to dial: " + err.Error())
 			}
-			nf.server.Mutex.Lock()
+			n.server.Mutex.Lock()
 			client := mygrpc.NewMyServiceClient(conn)
 			clientHealth := mygrpc.NewHealthClient(conn)
 			resp, err := clientHealth.Connected(
 				context.Background(),
-				&mygrpc.HealthCheckRequest{Service: strconv.Itoa(nf.serviceID)})
+				&mygrpc.HealthCheckRequest{Service: strconv.Itoa(n.serviceID)})
 			if resp == nil || resp.Ok == false {
 				grpclog.Info("problems to is say it connected")
 				return
 			}
-			nf.server.StatusMap[port] = mygrpc.HealthCheckResponse_SERVING
-			nf.communicate(client)
-			nf.server.StatusMap[port] = mygrpc.HealthCheckResponse_NOT_SERVING
-			nf.server.Mutex.Unlock()
+			n.server.StatusMap[port] = mygrpc.HealthCheckResponse_SERVING
+			n.communicate(client)
+			n.server.StatusMap[port] = mygrpc.HealthCheckResponse_NOT_SERVING
+			n.server.Mutex.Unlock()
 			defer func(conn *grpc.ClientConn) {
 				err := conn.Close()
 				if err != nil {
 					grpclog.Error(err)
 				}
-				nf.server.Mutex.Lock()
-				delete(nf.server.StatusMap, port)
-				nf.server.Mutex.Unlock()
+				n.server.Mutex.Lock()
+				delete(n.server.StatusMap, port)
+				n.server.Mutex.Unlock()
 			}(conn)
 		}(p)
 	}
 }
 
-func (nf *Neighbors) communicate(client mygrpc.MyServiceClient) {
-	ctx, cancel := context.WithTimeout(context.Background(), nf.timeout)
+func (n *Node) communicate(client mygrpc.MyServiceClient) {
+	ctx, cancel := context.WithTimeout(context.Background(), n.timeout)
 	defer cancel()
 	stream, err := client.SendRandString(ctx)
 	if err != nil {
@@ -177,18 +171,22 @@ func (nf *Neighbors) communicate(client mygrpc.MyServiceClient) {
 			if myMessage == nil {
 				continue
 			}
-			grpclog.Info("Got message " + myMessage.Message + " from " + strconv.Itoa(int(myMessage.ServiceID)) + " service")
+			incM := "Got message " + myMessage.Message + " from " + strconv.Itoa(int(myMessage.ServiceID)) + " service"
+			grpclog.Info(incM)
+			fmt.Println(incM)
 		}
 	}()
 	for _, message := range utils.GetRandStrings() {
 		m := &mygrpc.MyMessage{
-			ServiceID: int32(nf.serviceID),
+			ServiceID: int32(n.serviceID),
 			Message:   message,
 		}
 		if err = stream.Send(m); err != nil {
 			grpclog.Error("SendMessage failed " + err.Error())
 		}
-		grpclog.Info("Client: sending message " + m.Message)
+		sendM := "Client: sending message " + m.Message
+		grpclog.Info(sendM)
+		fmt.Println(sendM)
 	}
 	err = stream.CloseSend()
 	if err != nil {
