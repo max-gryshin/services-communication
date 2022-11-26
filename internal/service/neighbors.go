@@ -21,7 +21,6 @@ type Neighbors struct {
 	frequency              time.Duration
 	timeout                time.Duration
 	neighborsToCommunicate map[int]*neighborsSync
-	m                      sync.Mutex
 	server                 *server.Server
 }
 
@@ -37,7 +36,6 @@ func NewNeighbors(id int, portsToLookUp []int, frequency time.Duration, server *
 		frequency:              frequency,
 		timeout:                time.Second * 1,
 		neighborsToCommunicate: make(map[int]*neighborsSync),
-		m:                      sync.Mutex{},
 		server:                 server,
 	}
 	nf.opts = append(
@@ -60,14 +58,14 @@ func NewNeighbors(id int, portsToLookUp []int, frequency time.Duration, server *
 			}
 			for _, p := range nf.portsToLookUp {
 				p := strconv.Itoa(p)
-				nf.m.Lock()
+				nf.server.Mutex.Lock()
 				if status, ok := nf.server.StatusMap[p]; ok {
 					if status == mygrpc.HealthCheckResponse_SERVING {
-						nf.m.Unlock()
+						nf.server.Mutex.Unlock()
 						continue
 					}
 				}
-				nf.m.Unlock()
+				nf.server.Mutex.Unlock()
 				wg.Add(1)
 				count++
 				go func(waitGroup *sync.WaitGroup, port string) {
@@ -96,9 +94,9 @@ func NewNeighbors(id int, portsToLookUp []int, frequency time.Duration, server *
 							err != nil {
 							grpclog.Info("can't connect grpc server: %v, code: %v\n", err, grpc.Code(err))
 						}
-						nf.m.Lock()
+						nf.server.Mutex.Lock()
 						nf.server.StatusMap[port] = mygrpc.HealthCheckResponse_NOT_SERVING
-						nf.m.Unlock()
+						nf.server.Mutex.Unlock()
 					}
 					defer func() {
 						waitGroup.Done()
@@ -130,7 +128,7 @@ func (nf *Neighbors) LookUp() {
 			if err != nil {
 				grpclog.Error("fail to dial: " + err.Error())
 			}
-			nf.m.Lock()
+			nf.server.Mutex.Lock()
 			client := mygrpc.NewMyServiceClient(conn)
 			clientHealth := mygrpc.NewHealthClient(conn)
 			resp, err := clientHealth.Connected(
@@ -143,15 +141,15 @@ func (nf *Neighbors) LookUp() {
 			nf.server.StatusMap[port] = mygrpc.HealthCheckResponse_SERVING
 			nf.communicate(client)
 			nf.server.StatusMap[port] = mygrpc.HealthCheckResponse_NOT_SERVING
-			nf.m.Unlock()
+			nf.server.Mutex.Unlock()
 			defer func(conn *grpc.ClientConn) {
 				err := conn.Close()
 				if err != nil {
 					grpclog.Error(err)
 				}
-				nf.m.Lock()
+				nf.server.Mutex.Lock()
 				delete(nf.server.StatusMap, port)
-				nf.m.Unlock()
+				nf.server.Mutex.Unlock()
 			}(conn)
 		}(p)
 	}
@@ -182,7 +180,7 @@ func (nf *Neighbors) communicate(client mygrpc.MyServiceClient) {
 			grpclog.Info("Got message " + myMessage.Message + " from " + strconv.Itoa(int(myMessage.ServiceID)) + " service")
 		}
 	}()
-	for _, message := range utils.GetRandStringSlice() {
+	for _, message := range utils.GetRandStrings() {
 		m := &mygrpc.MyMessage{
 			ServiceID: int32(nf.serviceID),
 			Message:   message,

@@ -20,7 +20,7 @@ import (
 type Server struct {
 	port                     int
 	frequencyOfCommunication time.Duration
-	mu                       sync.Mutex
+	Mutex                    sync.Mutex
 	StatusMap                map[string]mygrpc.HealthCheckResponse_ServingStatus
 	mygrpc.UnimplementedMyServiceServer
 	mygrpc.UnimplementedHealthServer
@@ -34,7 +34,7 @@ func NewServer(port int, freq time.Duration) *Server {
 		port:                     port,
 		frequencyOfCommunication: freq,
 		StatusMap:                statusMap,
-		mu:                       sync.Mutex{},
+		Mutex:                    sync.Mutex{},
 	}
 
 	return &s
@@ -59,8 +59,8 @@ func (s *Server) Serve(port int) {
 }
 
 func (s *Server) Check(ctx context.Context, in *mygrpc.HealthCheckRequest) (*mygrpc.HealthCheckResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
 	if in.Service == "" {
 		// check the Server overall health status.
 		return &mygrpc.HealthCheckResponse{
@@ -76,8 +76,8 @@ func (s *Server) Check(ctx context.Context, in *mygrpc.HealthCheckRequest) (*myg
 }
 
 func (s *Server) Connected(ctx context.Context, in *mygrpc.HealthCheckRequest) (*mygrpc.ServeResponse, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
 	if _, ok := s.StatusMap[in.Service]; ok {
 		s.StatusMap[in.Service] = mygrpc.HealthCheckResponse_SERVING
 		return &mygrpc.ServeResponse{Ok: true}, nil
@@ -97,18 +97,17 @@ func (s *Server) SendRandString(stream mygrpc.MyService_SendRandStringServer) er
 		if err != nil {
 			return err
 		}
-		grpclog.Info(
-			"Incoming message " + incomingMessage.Message +
-				"from " + strconv.Itoa(int(incomingMessage.ServiceID)) + "service",
-		)
-		m := utils.RandStringBytesMask(20)
-		if err = stream.Send(&mygrpc.MyMessage{
-			ServiceID: int32(s.port),
-			Message:   m,
-		}); err != nil {
-			return err
+		grpclog.Info("Incoming message " + incomingMessage.Message +
+			" from " + strconv.Itoa(int(incomingMessage.ServiceID)) + " service")
+		for _, randStr := range utils.GetRandStrings() {
+			if err = stream.Send(&mygrpc.MyMessage{
+				ServiceID: int32(s.port),
+				Message:   randStr,
+			}); err != nil {
+				return err
+			}
+			grpclog.Info("Outgoing message " + randStr + ", from " + strconv.Itoa(s.port) + " service")
 		}
-		grpclog.Info("Outgoing message " + m + ", from " + strconv.Itoa(s.port) + " service")
 	}
 
 	return nil

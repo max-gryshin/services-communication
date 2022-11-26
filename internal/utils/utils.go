@@ -38,7 +38,7 @@ func RandStringBytesMask(n int) string {
 	return string(b)
 }
 
-func GetRandStringSlice() []string {
+func GetRandStrings() []string {
 	res := make([]string, 2)
 	for i := 0; i < 2; i++ {
 		res = append(res, RandStringBytesMask(10))
