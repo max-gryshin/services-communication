@@ -142,6 +142,7 @@ func (nf *Neighbors) LookUp() {
 			}
 			nf.server.StatusMap[port] = mygrpc.HealthCheckResponse_SERVING
 			nf.communicate(client)
+			nf.server.StatusMap[port] = mygrpc.HealthCheckResponse_NOT_SERVING
 			nf.m.Unlock()
 			defer func(conn *grpc.ClientConn) {
 				err := conn.Close()
