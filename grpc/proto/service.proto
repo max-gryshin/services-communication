@@ -7,11 +7,32 @@ package proto;
 
 option go_package = "/grpc";
 
-service MyService {
-    rpc SendRandString(stream MyMessage) returns (stream MyMessage) {}
+message HealthCheckRequest {
+  string service = 1;
 }
 
-message MyMessage {
-  int32 ServiceID = 1;
+message HealthCheckResponse {
+  enum Status {
+    UNKNOWN = 0;
+    SERVING_NOT_CONNECTED = 1;
+    SERVING_CONNECTED = 2;
+    NOT_SERVING = 3;
+  }
+  Status status = 1;
+}
+
+message Message {
+  string ServiceName = 1;
   string message = 2;
+}
+
+message ServeResponse {
+  bool ok = 1;
+}
+
+service ServiceCommunicator {
+  rpc SendRandString(stream Message) returns (stream Message) {}
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+  rpc Connected(HealthCheckRequest) returns (ServeResponse);
+  rpc Disconnected(HealthCheckRequest) returns (ServeResponse);
 }

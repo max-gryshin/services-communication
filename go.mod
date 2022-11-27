@@ -1,4 +1,4 @@
-module fiveServices
+module servicesCommunication
 
 go 1.18
 

@@ -2,9 +2,6 @@ package server
 
 import (
 	"context"
-	mygrpc "fiveServices/grpc"
-	"fiveServices/internal/grpclog"
-	"fiveServices/internal/utils"
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -12,23 +9,24 @@ import (
 	"google.golang.org/grpc/status"
 	"io"
 	"net"
-	"strconv"
+	serviceGrpc "servicesCommunication/grpc"
+	"servicesCommunication/internal/grpclog"
+	"servicesCommunication/internal/utils"
 	"sync"
 	"time"
 )
 
 type Server struct {
-	port                     int
+	port                     string
 	frequencyOfCommunication time.Duration
 	Mutex                    sync.Mutex
-	StatusMap                map[string]mygrpc.HealthCheckResponse_ServingStatus
-	mygrpc.UnimplementedMyServiceServer
-	mygrpc.UnimplementedHealthServer
+	StatusMap                map[string]serviceGrpc.HealthCheckResponse_Status
+	serviceGrpc.UnimplementedServiceCommunicatorServer
 }
 
-func NewServer(port int, freq time.Duration) *Server {
-	statusMap := make(map[string]mygrpc.HealthCheckResponse_ServingStatus)
-	statusMap[strconv.Itoa(port)] = mygrpc.HealthCheckResponse_NOT_SERVING
+func NewServer(port string, freq time.Duration) *Server {
+	statusMap := make(map[string]serviceGrpc.HealthCheckResponse_Status)
+	statusMap[port] = serviceGrpc.HealthCheckResponse_NOT_SERVING
 
 	s := Server{
 		port:                     port,
@@ -40,52 +38,67 @@ func NewServer(port int, freq time.Duration) *Server {
 	return &s
 }
 
-func (s *Server) Serve(port int) {
-	fmt.Printf("New Server up: %d \n", port)
-	lis, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+func (s *Server) Serve(port string) {
+	fmt.Printf("New Server up: %s \n", port)
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		grpclog.Fatal("failed to listen: %s" + err.Error())
 	}
 	grpcServer := grpc.NewServer()
-
-	mygrpc.RegisterHealthServer(grpcServer, s)
-	mygrpc.RegisterMyServiceServer(grpcServer, s)
+	serviceGrpc.RegisterServiceCommunicatorServer(grpcServer, s)
 	reflection.Register(grpcServer)
 	grpclog.Info("Server listening at" + lis.Addr().String())
-	fmt.Printf("Server listening at %s \n", lis.Addr().String())
 	if err = grpcServer.Serve(lis); err != nil {
 		grpclog.Fatal("failed to serve: %s" + err.Error())
 	}
 }
 
-func (s *Server) Check(ctx context.Context, in *mygrpc.HealthCheckRequest) (*mygrpc.HealthCheckResponse, error) {
+func (s *Server) HealthCheck(ctx context.Context, in *serviceGrpc.HealthCheckRequest) (*serviceGrpc.HealthCheckResponse, error) {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
 	if in.Service == "" {
 		// check the Server overall health status.
-		return &mygrpc.HealthCheckResponse{
-			Status: mygrpc.HealthCheckResponse_SERVING,
+		return &serviceGrpc.HealthCheckResponse{
+			Status: serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED,
 		}, nil
 	}
 	if servingStatus, ok := s.StatusMap[in.Service]; ok {
-		return &mygrpc.HealthCheckResponse{
+		return &serviceGrpc.HealthCheckResponse{
 			Status: servingStatus,
 		}, nil
 	}
 	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
-func (s *Server) Connected(ctx context.Context, in *mygrpc.HealthCheckRequest) (*mygrpc.ServeResponse, error) {
+func (s *Server) Connected(ctx context.Context, in *serviceGrpc.HealthCheckRequest) (*serviceGrpc.ServeResponse, error) {
+	s.Mutex.Lock()
+	defer s.Mutex.Unlock()
+
+	if serviceStatus, ok := s.StatusMap[in.Service]; ok {
+		if serviceStatus == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED {
+			fmt.Println("it is already connected")
+			return &serviceGrpc.ServeResponse{Ok: true}, nil
+		}
+		s.StatusMap[in.Service] = serviceGrpc.HealthCheckResponse_SERVING_CONNECTED
+		fmt.Println("we said that " + in.Service + " is connected")
+		fmt.Println(s.StatusMap)
+		return &serviceGrpc.ServeResponse{Ok: false}, nil
+	}
+	fmt.Println("Whoops!")
+	return nil, status.Error(codes.NotFound, "unknown service")
+}
+
+func (s *Server) Disconnected(ctx context.Context, in *serviceGrpc.HealthCheckRequest) (*serviceGrpc.ServeResponse, error) {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
 	if _, ok := s.StatusMap[in.Service]; ok {
-		s.StatusMap[in.Service] = mygrpc.HealthCheckResponse_SERVING
-		return &mygrpc.ServeResponse{Ok: true}, nil
+		s.StatusMap[in.Service] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
+		return &serviceGrpc.ServeResponse{Ok: true}, nil
 	}
 	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
-func (s *Server) SendRandString(stream mygrpc.MyService_SendRandStringServer) error {
+func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandStringServer) error {
 	for {
 		incomingMessage, err := stream.Recv()
 		if incomingMessage == nil {
@@ -97,20 +110,23 @@ func (s *Server) SendRandString(stream mygrpc.MyService_SendRandStringServer) er
 		if err != nil {
 			return err
 		}
-		incM := "Incoming message " + incomingMessage.Message +
-			" from " + strconv.Itoa(int(incomingMessage.ServiceID)) + " service"
-		grpclog.Info(incM)
-		fmt.Println(incM)
+		if incomingMessage.Message != "" {
+			incM := "Incoming message " + incomingMessage.Message + " from " + incomingMessage.ServiceName + " service"
+			grpclog.Info(incM)
+			fmt.Println(incM)
+		}
 		for _, randStr := range utils.GetRandStrings() {
-			if err = stream.Send(&mygrpc.MyMessage{
-				ServiceID: int32(s.port),
-				Message:   randStr,
+			if err = stream.Send(&serviceGrpc.Message{
+				ServiceName: s.port,
+				Message:     randStr,
 			}); err != nil {
 				return err
 			}
-			outM := "Outgoing message " + randStr + ", from " + strconv.Itoa(s.port) + " service"
-			grpclog.Info(outM)
-			fmt.Println(outM)
+			if randStr != "" {
+				outM := "Outgoing message " + randStr + ", from " + s.port + " service to " + incomingMessage.ServiceName
+				grpclog.Info(outM)
+				fmt.Println(outM)
+			}
 		}
 	}
 

@@ -66,7 +66,7 @@ func LoadSetting() *Setting {
 			PortMin:                portFrom,
 			PortMax:                portTo,
 			PortHTTP:               getEnv("APP_PORT_HTTP"),
-			FrequencyCommunication: time.Second * 2,
+			FrequencyCommunication: time.Second * 10,
 		},
 		Nodes: nodes,
 		App: App{

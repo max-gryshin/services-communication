@@ -1,13 +1,13 @@
 package grpclog
 
 import (
-	"fiveServices/internal/file"
-	"fiveServices/internal/setting"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"servicesCommunication/internal/file"
+	"servicesCommunication/internal/setting"
 )
 
 type Level int
