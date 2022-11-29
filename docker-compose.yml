@@ -14,7 +14,7 @@ services:
       APP_HOST: "${APP_HOST}"
       APP_SERVICE: "${APP_SERVICE}"
       LOG_PATH: "${LOG_PATH}"
-      LOG_NAME: "${LOG_NAME}_0"
+      LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
     ports:
       - "${APP_PORT}:${APP_PORT}"
@@ -33,7 +33,7 @@ services:
       APP_HOST: "${APP_HOST}"
       APP_SERVICE: "${APP_SERVICE}"
       LOG_PATH: "${LOG_PATH}"
-      LOG_NAME: "${LOG_NAME}_1"
+      LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
     ports:
       - "8201:8201"
@@ -52,7 +52,7 @@ services:
       APP_HOST: "${APP_HOST}"
       APP_SERVICE: "${APP_SERVICE}"
       LOG_PATH: "${LOG_PATH}"
-      LOG_NAME: "${LOG_NAME}_2"
+      LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
     ports:
       - "8202:8202"
@@ -71,7 +71,7 @@ services:
       APP_HOST: "${APP_HOST}"
       APP_SERVICE: "${APP_SERVICE}"
       LOG_PATH: "${LOG_PATH}"
-      LOG_NAME: "${LOG_NAME}_3"
+      LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
     ports:
       - "8203:8203"
@@ -90,7 +90,7 @@ services:
       APP_HOST: "${APP_HOST}"
       APP_SERVICE: "${APP_SERVICE}"
       LOG_PATH: "${LOG_PATH}"
-      LOG_NAME: "${LOG_NAME}_4"
+      LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
     ports:
       - "8204:8204"

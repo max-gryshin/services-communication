@@ -36,12 +36,7 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 		nf.opts,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-	ch := make(chan struct{})
 	go func() {
-		<-ch
-		defer func() {
-			close(ch)
-		}()
 		wg := sync.WaitGroup{}
 		ticker := time.NewTicker(nf.frequency)
 		count := 0
@@ -66,8 +61,7 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 				go func(waitGroup *sync.WaitGroup, port string) {
 					conn, err := grpc.Dial(utils.GetServiceName(port), nf.opts...)
 					if err != nil {
-						grpclog.Info(err)
-						fmt.Println(err.Error())
+						grpclog.Error(err.Error())
 					} else {
 						client := serviceGrpc.NewServiceCommunicatorClient(conn)
 						resp, err := client.HealthCheck(
@@ -77,9 +71,7 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 							return
 						}
 						if err != nil {
-							grpcConnectionErrMessage := "can't connect grpc server: " + port + ", code: " + err.Error()
-							grpclog.Info(grpcConnectionErrMessage)
-							fmt.Println(grpcConnectionErrMessage)
+							grpclog.Error(fmt.Sprintf("Can not connect grpc server: %s, code: %s", port, err.Error()))
 						}
 						nf.server.Mutex.Lock()
 						nf.server.StatusMap[port] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
@@ -88,7 +80,7 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 					defer func() {
 						waitGroup.Done()
 						if conn != nil {
-							err := conn.Close()
+							err = conn.Close()
 							if err != nil {
 								grpclog.Error(err)
 							}
@@ -99,24 +91,19 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 			wg.Wait()
 		}
 	}()
-	ch <- struct{}{}
-
 	return &nf
 }
 
 func (n *Node) LookUp() {
-	//fmt.Println(n.server.StatusMap)
 	for port, neighborSync := range n.server.StatusMap {
 		if neighborSync == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED || n.serviceID == port {
 			continue
 		}
 		p := port
 		go func(port string) {
-			//fmt.Println("New Connection with: " + port)
 			conn, err := grpc.Dial(utils.GetServiceName(port), n.opts...)
 			if err != nil {
-				fmt.Println("fail to dial: " + err.Error())
-				grpclog.Error("fail to dial: " + err.Error())
+				grpclog.Error(err)
 			}
 			client := serviceGrpc.NewServiceCommunicatorClient(conn)
 			if n.connected(client) {
@@ -127,14 +114,12 @@ func (n *Node) LookUp() {
 			n.communicate(client, port)
 			n.disconnected(client)
 			n.server.StatusMap[port] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
-			//n.server.Mutex.Unlock()
 			defer func(conn *grpc.ClientConn) {
-				err := conn.Close()
+				err = conn.Close()
 				if err != nil {
 					grpclog.Error(err)
 				}
-				//n.server.Mutex.Lock()
-				fmt.Println("End connection with " + port)
+				grpclog.Info(fmt.Sprintf("End connection with %s", port))
 				n.server.StatusMap[port] = serviceGrpc.HealthCheckResponse_NOT_SERVING
 				n.server.Mutex.Unlock()
 			}(conn)
@@ -147,7 +132,7 @@ func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, service
 	defer cancel()
 	stream, err := client.SendRandString(ctx)
 	if err != nil {
-		grpclog.Error("client.SendRandString failed:v" + err.Error())
+		grpclog.Error(err)
 	}
 	waitc := make(chan struct{})
 	go func() {
@@ -159,15 +144,13 @@ func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, service
 				return
 			}
 			if errRecv != nil {
-				grpclog.Error("client.Recv failed: " + errRecv.Error())
+				grpclog.Error(errRecv)
 			}
 			if myMessage == nil {
 				continue
 			}
 			if myMessage.Message != "" {
-				incM := "Got message " + myMessage.Message + " from " + myMessage.ServiceName + " service"
-				grpclog.Info(incM)
-				fmt.Println(incM)
+				grpclog.Info(fmt.Sprintf("Got message  %s from %s", myMessage.Message, myMessage.ServiceName))
 			}
 		}
 	}()
@@ -177,12 +160,10 @@ func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, service
 			Message:     message,
 		}
 		if err = stream.Send(m); err != nil {
-			grpclog.Error("SendMessage failed " + err.Error())
+			grpclog.Error(fmt.Sprintf("SendMessage failed %s", err.Error()))
 		}
 		if m.Message != "" {
-			sendM := "Client: sending message " + m.Message + " to " + serviceID
-			grpclog.Info(sendM)
-			fmt.Println(sendM)
+			grpclog.Info(fmt.Sprintf("Client: sending message %s to %s", m.Message, serviceID))
 		}
 	}
 	err = stream.CloseSend()
@@ -197,12 +178,11 @@ func (n *Node) connected(client serviceGrpc.ServiceCommunicatorClient) bool {
 		context.Background(),
 		&serviceGrpc.HealthCheckRequest{Service: n.serviceID})
 	if resp == nil {
-		grpclog.Info("problems to is say it connected")
-		fmt.Println("problems to is say it connected")
+		grpclog.Error("Can not notify about connect")
 		return false
 	}
 	if err != nil {
-		fmt.Println("problems with marking a connect:" + err.Error())
+		grpclog.Error(fmt.Sprintf("Marking a connect: %s", err.Error()))
 	}
 
 	return resp.Ok
@@ -213,11 +193,10 @@ func (n *Node) disconnected(client serviceGrpc.ServiceCommunicatorClient) {
 		context.Background(),
 		&serviceGrpc.HealthCheckRequest{Service: n.serviceID})
 	if resp == nil || resp.Ok == false {
-		grpclog.Info("problems to is say it connected")
-		fmt.Println("problems to is say it connected")
+		grpclog.Error("Can not notify about disconnect")
 		return
 	}
 	if err != nil {
-		fmt.Println("problems with marking a disconnect:" + err.Error())
+		grpclog.Error(fmt.Sprintf("Marking a disconnect: %s", err.Error()))
 	}
 }

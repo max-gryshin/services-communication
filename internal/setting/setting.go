@@ -2,16 +2,18 @@ package setting
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"os"
+	"path/filepath"
+	"servicesCommunication/internal/file"
 	"strconv"
 	"time"
 )
 
 // App is a structure for storage app configuration
 type App struct {
-	LogSavePath     string
-	LogSaveName     string
-	LogFileExt      string
+	LogOut          io.Writer
 	RuntimeRootPath string
 	ServiceName     string
 }
@@ -59,6 +61,7 @@ func LoadSetting() *Setting {
 		}
 		nodes = append(nodes, i)
 	}
+
 	return &Setting{
 		ServerConfig: ServerSetting{
 			Host:                   getEnv("APP_HOST"),
@@ -66,13 +69,11 @@ func LoadSetting() *Setting {
 			PortMin:                portFrom,
 			PortMax:                portTo,
 			PortHTTP:               getEnv("APP_PORT_HTTP"),
-			FrequencyCommunication: time.Second * 10,
+			FrequencyCommunication: time.Second * 5,
 		},
 		Nodes: nodes,
 		App: App{
-			getEnv("LOG_PATH"),
-			getEnv("LOG_NAME"),
-			getEnv("LOG_EXT"),
+			os.Stdout, // getFileLog
 			".",
 			getEnv("APP_SERVICE"),
 		},
@@ -86,4 +87,15 @@ func getEnv(key string) string {
 	}
 
 	return ""
+}
+
+func getFileLog() io.Writer {
+	filePath := filepath.Join(".", getEnv("LOG_PATH"))
+	fileName := getEnv("LOG_NAME") + "." + getEnv("LOG_EXT")
+	f, err := file.MustOpen(fileName, filePath)
+	if err != nil {
+		log.Fatalf("grpclog.Setup err: %v", err)
+	}
+
+	return f
 }

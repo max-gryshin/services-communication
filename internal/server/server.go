@@ -39,7 +39,7 @@ func NewServer(port string, freq time.Duration) *Server {
 }
 
 func (s *Server) Serve(port string) {
-	fmt.Printf("New Server up: %s \n", port)
+	grpclog.Info("New Server up: " + port)
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		grpclog.Fatal("failed to listen: %s" + err.Error())
@@ -76,15 +76,11 @@ func (s *Server) Connected(ctx context.Context, in *serviceGrpc.HealthCheckReque
 
 	if serviceStatus, ok := s.StatusMap[in.Service]; ok {
 		if serviceStatus == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED {
-			fmt.Println("it is already connected")
 			return &serviceGrpc.ServeResponse{Ok: true}, nil
 		}
 		s.StatusMap[in.Service] = serviceGrpc.HealthCheckResponse_SERVING_CONNECTED
-		fmt.Println("we said that " + in.Service + " is connected")
-		fmt.Println(s.StatusMap)
 		return &serviceGrpc.ServeResponse{Ok: false}, nil
 	}
-	fmt.Println("Whoops!")
 	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
@@ -111,9 +107,7 @@ func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandS
 			return err
 		}
 		if incomingMessage.Message != "" {
-			incM := "Incoming message " + incomingMessage.Message + " from " + incomingMessage.ServiceName + " service"
-			grpclog.Info(incM)
-			fmt.Println(incM)
+			grpclog.Info(fmt.Sprintf("Incoming message %s from %s ", incomingMessage.Message, incomingMessage.ServiceName))
 		}
 		for _, randStr := range utils.GetRandStrings() {
 			if err = stream.Send(&serviceGrpc.Message{
@@ -123,9 +117,7 @@ func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandS
 				return err
 			}
 			if randStr != "" {
-				outM := "Outgoing message " + randStr + ", from " + s.port + " service to " + incomingMessage.ServiceName
-				grpclog.Info(outM)
-				fmt.Println(outM)
+				grpclog.Info(fmt.Sprintf("Outgoing message %s, from %s service to %s", randStr, s.port, incomingMessage.ServiceName))
 			}
 		}
 	}

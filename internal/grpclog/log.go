@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"servicesCommunication/internal/file"
 	"servicesCommunication/internal/setting"
 )
 
@@ -33,15 +32,7 @@ const (
 
 // Setup initialize the log instance
 func Setup(config *setting.App) {
-	var err error
-	filePath := filepath.Join(config.RuntimeRootPath, config.LogSavePath)
-	fileName := config.LogSaveName + "." + config.LogFileExt
-	f, err = file.MustOpen(fileName, filePath)
-	if err != nil {
-		log.Fatalf("grpclog.Setup err: %v", err)
-	}
-
-	logger = log.New(f, DefaultPrefix, log.LstdFlags)
+	logger = log.New(config.LogOut, DefaultPrefix, log.LstdFlags)
 }
 
 // Close closes output file
