@@ -17,7 +17,7 @@ services:
       DOCKER_INFLUXDB_INIT_BUCKET: "max"
       DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${TELEGRAF_INFLUXDB_TOKEN}
       INFLUXDB_USERNAME: "max"
-      INFLUXDB_PASSWORD: "maxim1rowing"
+      INFLUXDB_PASSWORD: "max"
       INFLUXDB_URL: "http://influxdb:8086"
 
   telegraf:
