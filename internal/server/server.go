@@ -97,9 +97,6 @@ func (s *Server) Disconnected(ctx context.Context, in *serviceGrpc.HealthCheckRe
 func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandStringServer) error {
 	for {
 		incomingMessage, err := stream.Recv()
-		if incomingMessage == nil {
-			break
-		}
 		if err == io.EOF {
 			break
 		}
@@ -107,17 +104,19 @@ func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandS
 			return err
 		}
 		if incomingMessage.Message != "" {
-			grpclog.Info(fmt.Sprintf("Incoming message %s from %s ", incomingMessage.Message, incomingMessage.ServiceName))
-		}
-		for _, randStr := range utils.GetRandStrings() {
-			if err = stream.Send(&serviceGrpc.Message{
-				ServiceName: s.port,
-				Message:     randStr,
-			}); err != nil {
-				return err
-			}
-			if randStr != "" {
-				grpclog.Info(fmt.Sprintf("Outgoing message %s, from %s service to %s", randStr, s.port, incomingMessage.ServiceName))
+			grpclog.Info(fmt.Sprintf("Server: receive %s from %s ", incomingMessage.Message, incomingMessage.ServiceName))
+			for _, randStr := range utils.GetRandStrings(2, 10) {
+				if randStr == "" {
+					continue
+				}
+				newM := incomingMessage.Message + "-" + randStr
+				if err = stream.Send(&serviceGrpc.Message{
+					ServiceName: s.port,
+					Message:     newM,
+				}); err != nil {
+					return err
+				}
+				grpclog.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.port, incomingMessage.ServiceName))
 			}
 		}
 	}

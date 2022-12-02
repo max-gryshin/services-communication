@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
 	"log"
 	"servicesCommunication/internal/grpclog"
 	myServer "servicesCommunication/internal/server"
@@ -13,10 +12,6 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Print(err.Error())
-		log.Print("No .env file found")
-	}
 	settings := setting.LoadSetting()
 	utils.SetUpUtils(settings.App.ServiceName, settings.ServerConfig.PortMin)
 	grpclog.Setup(&settings.App)

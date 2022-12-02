@@ -3,6 +3,7 @@ package utils
 import (
 	"math/rand"
 	"strconv"
+	"time"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -14,6 +15,10 @@ const (
 
 var n string
 var pMin int
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
 
 func SetUpUtils(appName string, portMin int) {
 	n = appName
@@ -38,12 +43,11 @@ func RandStringBytesMask(n int) string {
 	return string(b)
 }
 
-func GetRandStrings() []string {
-	res := make([]string, 2)
-	for i := 0; i < 2; i++ {
-		res = append(res, RandStringBytesMask(10))
+func GetRandStrings(n int, length int) []string {
+	res := make([]string, n)
+	for i := 0; i < n; i++ {
+		res = append(res, RandStringBytesMask(length))
 	}
-
 	return res
 }
 

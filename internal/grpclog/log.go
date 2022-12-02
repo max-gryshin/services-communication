@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
 	"servicesCommunication/internal/setting"
+	"time"
 )
 
 type Level int
@@ -76,9 +76,9 @@ func Fatal(v ...interface{}) {
 
 // setPrefix set the prefix of the log output
 func setPrefix(level Level) {
-	_, fileName, line, ok := runtime.Caller(DefaultCallerDepth)
+	_, _, _, ok := runtime.Caller(DefaultCallerDepth)
 	if ok {
-		logPrefix = fmt.Sprintf("[%s][%s:%d]", levelFlags[level], filepath.Base(fileName), line)
+		logPrefix = fmt.Sprintf("[%s][%s]", levelFlags[level], time.Now().Format("04:05.999999999Z07:00"))
 	} else {
 		logPrefix = fmt.Sprintf("[%s]", levelFlags[level])
 	}

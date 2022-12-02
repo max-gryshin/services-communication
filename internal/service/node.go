@@ -150,20 +150,20 @@ func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, service
 				continue
 			}
 			if myMessage.Message != "" {
-				grpclog.Info(fmt.Sprintf("Got message  %s from %s", myMessage.Message, myMessage.ServiceName))
+				grpclog.Info(fmt.Sprintf("Client: receive %s from %s", myMessage.Message, myMessage.ServiceName))
 			}
 		}
 	}()
-	for _, message := range utils.GetRandStrings() {
+	for _, message := range utils.GetRandStrings(2, 15) {
 		m := &serviceGrpc.Message{
 			ServiceName: n.serviceID,
 			Message:     message,
 		}
 		if err = stream.Send(m); err != nil {
-			grpclog.Error(fmt.Sprintf("SendMessage failed %s", err.Error()))
+			grpclog.Error(fmt.Sprintf("Client: failed %s", err.Error()))
 		}
 		if m.Message != "" {
-			grpclog.Info(fmt.Sprintf("Client: sending message %s to %s", m.Message, serviceID))
+			grpclog.Info(fmt.Sprintf("Client: sent %s to %s", m.Message, serviceID))
 		}
 	}
 	err = stream.CloseSend()
