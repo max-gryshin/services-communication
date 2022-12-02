@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"servicesCommunication/internal/setting"
+	"time"
 )
 
 type Level int
@@ -78,7 +79,7 @@ func Fatal(v ...interface{}) {
 func setPrefix(level Level) {
 	_, fileName, line, ok := runtime.Caller(DefaultCallerDepth)
 	if ok {
-		logPrefix = fmt.Sprintf("[%s][%s:%d]", levelFlags[level], filepath.Base(fileName), line)
+		logPrefix = fmt.Sprintf("[%s][%s:%d][%s]", levelFlags[level], filepath.Base(fileName), line, time.Now().String())
 	} else {
 		logPrefix = fmt.Sprintf("[%s]", levelFlags[level])
 	}

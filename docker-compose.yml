@@ -1,6 +1,45 @@
 version: "3.7"
 
 services:
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    ports:
+      - 8086:8086
+    volumes:
+      - influxdb-storage:/var/lib/influxdb
+    environment:
+      INFLUXDB_DB: "${INFLUXDB_DB}"
+      INFLUXDB_ADMIN_USER: "admin"
+      INFLUXDB_ADMIN_PASSWORD: "admin"
+      INFLUXDB_TOKEN: "admin"
+      DOCKER_INFLUXDB_INIT_ORG: "max"
+      DOCKER_INFLUXDB_INIT_BUCKET: "max"
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${TELEGRAF_INFLUXDB_TOKEN}
+      INFLUXDB_USERNAME: "max"
+      INFLUXDB_PASSWORD: "maxim1rowing"
+      INFLUXDB_URL: "http://influxdb:8086"
+
+  telegraf:
+    image: telegraf:alpine
+    container_name: telegraf
+    links:
+      - influxdb
+    depends_on:
+      - influxdb
+    volumes:
+      # Mount for telegraf config
+      - ./telegraf/mytelegraf.conf:/etc/telegraf/telegraf.conf
+    #env_file:
+    #  - ./influxv2.env
+    environment:
+      DOCKER_INFLUXDB_INIT_ORG: "max"
+      DOCKER_INFLUXDB_INIT_BUCKET: "max"
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "admin"
+      INFLUX_TOKEN: "mwSIjkuYAI0RQ-weYK5otcLEmgAStgY1izrz8etl0a3dm7rDj6qUxObUWggXjo21fh7O9UWMrLAW1-PCQ2NOvw=="
+    ports:
+      - '127.0.0.1:8125:8125/udp'
+
   app1:
     build:
       dockerfile: Dockerfile
@@ -16,6 +55,8 @@ services:
       LOG_PATH: "${LOG_PATH}"
       LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
+      INFLUXDB_TOKEN: "mwSIjkuYAI0RQ-weYK5otcLEmgAStgY1izrz8etl0a3dm7rDj6qUxObUWggXjo21fh7O9UWMrLAW1-PCQ2NOvw=="
+      INFLUXDB_URL: "http://influxdb:8086"
     ports:
       - "${APP_PORT}:${APP_PORT}"
     tty: yes
@@ -35,6 +76,8 @@ services:
       LOG_PATH: "${LOG_PATH}"
       LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
+      INFLUXDB_TOKEN: "mwSIjkuYAI0RQ-weYK5otcLEmgAStgY1izrz8etl0a3dm7rDj6qUxObUWggXjo21fh7O9UWMrLAW1-PCQ2NOvw=="
+      INFLUXDB_URL: "http://influxdb:8086"
     ports:
       - "8201:8201"
     tty: yes
@@ -95,3 +138,6 @@ services:
     ports:
       - "8204:8204"
     tty: yes
+
+volumes:
+  influxdb-storage:

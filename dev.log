@@ -1,0 +1,233 @@
+Attaching to service0, service2, service1
+service0 | 2022/11/30 10:46:03 open .env: no such file or directory
+service0 | 2022/11/30 10:46:03 No .env file found
+service0 | [INFO]2022/11/30 10:46:03 New Server up: 8200
+service0 | [INFO]2022/11/30 10:46:03 Server listening at[::]:8200
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing XzpLGIehps, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing uqtCDMLxiD, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing rGhblTtxWd, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing EFPyynhwJy, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Server: incoming XzpLGIehps from 8201 
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing GqiQWIXnku, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing eAerqyNEUz, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Server: incoming uqtCDMLxiD from 8201 
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing xKGLwQvuyN, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing SlcxgdXhhu, to 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: send WeLrQKjLxz to 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: send rBqDOTtGTO to 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive GqiQWIXnku from 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive eAerqyNEUz from 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive xKGLwQvuyN from 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive SlcxgdXhhu from 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive WeLrQKjLxz from 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive rBqDOTtGTO from 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive BSpYuLyYgg from 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: receive wNbeHVIkPZ from 8201
+service0 | [INFO]2022/11/30 10:46:13 End connection with 8201
+service0 | [INFO]2022/11/30 10:46:13 Client: send BSpYuLyYgg to 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: send wNbeHVIkPZ to 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing MOXcnQfyze, to 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing SUkMhPjMax, to 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive MOXcnQfyze from 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing OygZsTxPjf, to 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive SUkMhPjMax from 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing TPXtpHRGdI, to 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive OygZsTxPjf from 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive TPXtpHRGdI from 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive yKUfEWAnNB from 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive GNoFBIHxvi from 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive EdlEWDODFR from 8202
+service0 | [INFO]2022/11/30 10:46:13 Client: receive BORIuZqoXl from 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: incoming BSpYuLyYgg from 8202 
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing yKUfEWAnNB, to 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing GNoFBIHxvi, to 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: incoming wNbeHVIkPZ from 8202 
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing EdlEWDODFR, to 8202
+service0 | [INFO]2022/11/30 10:46:13 Server: outgoing BORIuZqoXl, to 8202
+service0 | [INFO]2022/11/30 10:46:23 Already connected with 8201
+service0 | [INFO]2022/11/30 10:46:28 Already connected with 8201
+service0 | [INFO]2022/11/30 10:46:33 Already connected with 8201
+service0 | [INFO]2022/11/30 10:46:38 Already connected with 8201
+service0 | [INFO]2022/11/30 10:46:43 Already connected with 8201
+service0 | [INFO]2022/11/30 10:46:48 Already connected with 8201
+service0 | [INFO]2022/11/30 10:46:53 Already connected with 8201
+service0 | [INFO]2022/11/30 10:46:58 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:03 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:08 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:13 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:18 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:23 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:28 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:33 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:38 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:43 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:48 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:53 Already connected with 8201
+service0 | [INFO]2022/11/30 10:47:58 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:03 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:08 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:13 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:18 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:23 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:28 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:33 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:38 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:43 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:48 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:53 Already connected with 8201
+service0 | [INFO]2022/11/30 10:48:58 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:03 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:08 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:13 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:18 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:23 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:28 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:33 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:38 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:43 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:48 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:53 Already connected with 8201
+service0 | [INFO]2022/11/30 10:49:58 Already connected with 8201
+service0 | [INFO]2022/11/30 10:50:03 Already connected with 8201
+service0 | [INFO]2022/11/30 10:50:08 Already connected with 8201
+service2 | 2022/11/30 10:46:03 open .env: no such file or directory
+service2 | 2022/11/30 10:46:03 No .env file found
+service2 | [INFO]2022/11/30 10:46:03 New Server up: 8202
+service2 | [INFO]2022/11/30 10:46:03 Server listening at[::]:8202
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing XzpLGIehps, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing uqtCDMLxiD, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing rGhblTtxWd, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing EFPyynhwJy, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Server: incoming rGhblTtxWd from 8201 
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing GqiQWIXnku, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing eAerqyNEUz, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Server: incoming EFPyynhwJy from 8201 
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing xKGLwQvuyN, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing SlcxgdXhhu, to 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: send WeLrQKjLxz to 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: send rBqDOTtGTO to 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive MOXcnQfyze from 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive SUkMhPjMax from 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive OygZsTxPjf from 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive TPXtpHRGdI from 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive yKUfEWAnNB from 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive GNoFBIHxvi from 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive EdlEWDODFR from 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: receive BORIuZqoXl from 8201
+service2 | [INFO]2022/11/30 10:46:13 End connection with 8201
+service2 | [INFO]2022/11/30 10:46:13 Client: send BSpYuLyYgg to 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: send wNbeHVIkPZ to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing MOXcnQfyze, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing SUkMhPjMax, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing OygZsTxPjf, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing TPXtpHRGdI, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: incoming BSpYuLyYgg from 8200 
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing yKUfEWAnNB, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing GNoFBIHxvi, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: incoming wNbeHVIkPZ from 8200 
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing EdlEWDODFR, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Server: outgoing BORIuZqoXl, to 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive MOXcnQfyze from 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive SUkMhPjMax from 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive OygZsTxPjf from 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive TPXtpHRGdI from 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive yKUfEWAnNB from 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive GNoFBIHxvi from 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive EdlEWDODFR from 8200
+service2 | [INFO]2022/11/30 10:46:13 Client: receive BORIuZqoXl from 8200
+service2 | [INFO]2022/11/30 10:46:23 Already connected with 8201
+service2 | [INFO]2022/11/30 10:46:28 Already connected with 8201
+service2 | [INFO]2022/11/30 10:46:33 Already connected with 8201
+service2 | [INFO]2022/11/30 10:46:38 Already connected with 8201
+service2 | [INFO]2022/11/30 10:46:43 Already connected with 8201
+service2 | [INFO]2022/11/30 10:46:48 Already connected with 8201
+service2 | [INFO]2022/11/30 10:46:53 Already connected with 8201
+service2 | [INFO]2022/11/30 10:46:58 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:03 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:08 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:13 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:18 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:23 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:28 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:33 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:38 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:43 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:48 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:53 Already connected with 8201
+service2 | [INFO]2022/11/30 10:47:58 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:03 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:08 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:13 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:18 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:23 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:28 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:33 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:38 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:43 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:48 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:53 Already connected with 8201
+service2 | [INFO]2022/11/30 10:48:58 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:03 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:08 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:13 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:18 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:23 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:28 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:33 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:38 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:43 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:48 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:53 Already connected with 8201
+service2 | [INFO]2022/11/30 10:49:58 Already connected with 8201
+service2 | [INFO]2022/11/30 10:50:03 Already connected with 8201
+service2 | [INFO]2022/11/30 10:50:08 Already connected with 8201
+service1 | 2022/11/30 10:46:03 open .env: no such file or directory
+service1 | 2022/11/30 10:46:03 No .env file found
+service1 | [INFO]2022/11/30 10:46:03 New Server up: 8201
+service1 | [INFO]2022/11/30 10:46:03 Server listening at[::]:8201
+service1 | [INFO]2022/11/30 10:46:13 Client: send XzpLGIehps to 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: send uqtCDMLxiD to 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive XzpLGIehps from 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive uqtCDMLxiD from 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive rGhblTtxWd from 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive EFPyynhwJy from 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive GqiQWIXnku from 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive eAerqyNEUz from 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive xKGLwQvuyN from 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: receive SlcxgdXhhu from 8200
+service1 | [INFO]2022/11/30 10:46:13 End connection with 8200
+service1 | [INFO]2022/11/30 10:46:13 Client: send rGhblTtxWd to 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: send EFPyynhwJy to 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive XzpLGIehps from 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive uqtCDMLxiD from 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive rGhblTtxWd from 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive EFPyynhwJy from 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive GqiQWIXnku from 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive eAerqyNEUz from 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive xKGLwQvuyN from 8202
+service1 | [INFO]2022/11/30 10:46:13 Client: receive SlcxgdXhhu from 8202
+service1 | [INFO]2022/11/30 10:46:13 End connection with 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing GqiQWIXnku, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing eAerqyNEUz, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing xKGLwQvuyN, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing SlcxgdXhhu, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: incoming WeLrQKjLxz from 8200 
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing WeLrQKjLxz, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing rBqDOTtGTO, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: incoming rBqDOTtGTO from 8200 
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing BSpYuLyYgg, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing wNbeHVIkPZ, to 8200
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing MOXcnQfyze, to 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing SUkMhPjMax, to 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing OygZsTxPjf, to 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing TPXtpHRGdI, to 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: incoming WeLrQKjLxz from 8202 
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing yKUfEWAnNB, to 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing GNoFBIHxvi, to 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: incoming rBqDOTtGTO from 8202 
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing EdlEWDODFR, to 8202
+service1 | [INFO]2022/11/30 10:46:13 Server: outgoing BORIuZqoXl, to 8202
+service2 | [INFO]2022/11/30 10:50:13 Already connected with 8201
+service0 | [INFO]2022/11/30 10:50:13 Already connected with 8201
+service0 | [INFO]2022/11/30 10:50:18 Already connected with 8201
+service2 | [INFO]2022/11/30 10:50:18 Already connected with 8201

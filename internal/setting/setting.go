@@ -13,9 +13,13 @@ import (
 
 // App is a structure for storage app configuration
 type App struct {
-	LogOut          io.Writer
-	RuntimeRootPath string
-	ServiceName     string
+	LogOut             io.Writer
+	RuntimeRootPath    string
+	ServiceName        string
+	UnfluxDBToken      string
+	UnfluxDBURL        string
+	UnfluxDBOrgName    string
+	UnfluxDBBucketName string
 }
 
 // ServerSetting is a structure for storage user_protobuf configuration
@@ -69,13 +73,17 @@ func LoadSetting() *Setting {
 			PortMin:                portFrom,
 			PortMax:                portTo,
 			PortHTTP:               getEnv("APP_PORT_HTTP"),
-			FrequencyCommunication: time.Second * 5,
+			FrequencyCommunication: time.Second * 2,
 		},
 		Nodes: nodes,
 		App: App{
 			os.Stdout, // getFileLog
 			".",
-			getEnv("APP_SERVICE"),
+			getEnv("HOST"),
+			getEnv("INFLUXDB_TOKEN"),
+			getEnv("INFLUXDB_URL"),
+			"max",
+			"max",
 		},
 	}
 }

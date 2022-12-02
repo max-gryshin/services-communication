@@ -21,10 +21,11 @@ type Server struct {
 	frequencyOfCommunication time.Duration
 	Mutex                    sync.Mutex
 	StatusMap                map[string]serviceGrpc.HealthCheckResponse_Status
+	Logger                   grpclog.InfluxLogger
 	serviceGrpc.UnimplementedServiceCommunicatorServer
 }
 
-func NewServer(port string, freq time.Duration) *Server {
+func NewServer(port string, freq time.Duration, logger grpclog.InfluxLogger) *Server {
 	statusMap := make(map[string]serviceGrpc.HealthCheckResponse_Status)
 	statusMap[port] = serviceGrpc.HealthCheckResponse_NOT_SERVING
 
@@ -32,6 +33,7 @@ func NewServer(port string, freq time.Duration) *Server {
 		port:                     port,
 		frequencyOfCommunication: freq,
 		StatusMap:                statusMap,
+		Logger:                   logger,
 		Mutex:                    sync.Mutex{},
 	}
 
@@ -39,8 +41,8 @@ func NewServer(port string, freq time.Duration) *Server {
 }
 
 func (s *Server) Serve(port string) {
-	grpclog.Info("New Server up: " + port)
-	lis, err := net.Listen("tcp", ":"+port)
+	s.Logger.WriteEvent("server", map[string]string{"up": port})
+	lis, err := net.Listen("tcp", "")
 	if err != nil {
 		grpclog.Fatal("failed to listen: %s" + err.Error())
 	}
@@ -107,6 +109,10 @@ func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandS
 			return err
 		}
 		if incomingMessage.Message != "" {
+			s.Logger.WriteEvent(
+				"server",
+				map[string]string{"incoming": incomingMessage.Message, "from": incomingMessage.ServiceName},
+			)
 			grpclog.Info(fmt.Sprintf("Incoming message %s from %s ", incomingMessage.Message, incomingMessage.ServiceName))
 		}
 		for _, randStr := range utils.GetRandStrings() {
@@ -117,6 +123,10 @@ func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandS
 				return err
 			}
 			if randStr != "" {
+				s.Logger.WriteEvent(
+					"server",
+					map[string]string{"outgoing": randStr, "to": incomingMessage.ServiceName},
+				)
 				grpclog.Info(fmt.Sprintf("Outgoing message %s, from %s service to %s", randStr, s.port, incomingMessage.ServiceName))
 			}
 		}

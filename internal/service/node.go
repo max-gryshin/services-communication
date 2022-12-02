@@ -150,7 +150,10 @@ func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, service
 				continue
 			}
 			if myMessage.Message != "" {
-				grpclog.Info(fmt.Sprintf("Got message  %s from %s", myMessage.Message, myMessage.ServiceName))
+				n.server.Logger.WriteEvent(
+					"client",
+					map[string]string{"receive": myMessage.Message, "from": myMessage.ServiceName},
+				)
 			}
 		}
 	}()
@@ -160,10 +163,13 @@ func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, service
 			Message:     message,
 		}
 		if err = stream.Send(m); err != nil {
-			grpclog.Error(fmt.Sprintf("SendMessage failed %s", err.Error()))
+			grpclog.Error(fmt.Sprintf("Client: SendMessage failed %s", err.Error()))
 		}
 		if m.Message != "" {
-			grpclog.Info(fmt.Sprintf("Client: sending message %s to %s", m.Message, serviceID))
+			n.server.Logger.WriteEvent(
+				"client",
+				map[string]string{"send": m.Message, "to": serviceID},
+			)
 		}
 	}
 	err = stream.CloseSend()
