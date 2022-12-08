@@ -21,6 +21,4 @@ services:
       LOG_PATH: "${LOG_PATH}"
       LOG_NAME: "${LOG_NAME}"
       LOG_EXT: "${LOG_EXT}"
-    #ports:
-    #  - "90-95:${APP_PORT}"
     tty: yes
