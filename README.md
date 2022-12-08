@@ -1,4 +1,14 @@
 # services communication
 
 ### Requirements
-Needs to create bidirectional communication between services with logging 
+Bidirectional communication between nodes with logging. 
+
+# Run
+```shell
+docker-compose up -d --build
+```
+
+# store logs
+```shell
+docker-compose logs -f > dev.log
+```

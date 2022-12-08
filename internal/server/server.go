@@ -17,19 +17,19 @@ import (
 )
 
 type Server struct {
-	port                     string
+	id                       string
 	frequencyOfCommunication time.Duration
 	Mutex                    sync.Mutex
 	StatusMap                map[string]serviceGrpc.HealthCheckResponse_Status
 	serviceGrpc.UnimplementedServiceCommunicatorServer
 }
 
-func NewServer(port string, freq time.Duration) *Server {
+func NewServer(id string, freq time.Duration) *Server {
 	statusMap := make(map[string]serviceGrpc.HealthCheckResponse_Status)
-	statusMap[port] = serviceGrpc.HealthCheckResponse_NOT_SERVING
+	statusMap[id] = serviceGrpc.HealthCheckResponse_NOT_SERVING
 
 	s := Server{
-		port:                     port,
+		id:                       id,
 		frequencyOfCommunication: freq,
 		StatusMap:                statusMap,
 		Mutex:                    sync.Mutex{},
@@ -39,7 +39,7 @@ func NewServer(port string, freq time.Duration) *Server {
 }
 
 func (s *Server) Serve(port string) {
-	grpclog.Info("New Server up: " + port)
+	grpclog.Info("New Server up: " + s.id)
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		grpclog.Fatal("failed to listen: %s" + err.Error())
@@ -47,7 +47,6 @@ func (s *Server) Serve(port string) {
 	grpcServer := grpc.NewServer()
 	serviceGrpc.RegisterServiceCommunicatorServer(grpcServer, s)
 	reflection.Register(grpcServer)
-	grpclog.Info("Server listening at" + lis.Addr().String())
 	if err = grpcServer.Serve(lis); err != nil {
 		grpclog.Fatal("failed to serve: %s" + err.Error())
 	}
@@ -111,12 +110,12 @@ func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandS
 				}
 				newM := incomingMessage.Message + "-" + randStr
 				if err = stream.Send(&serviceGrpc.Message{
-					ServiceName: s.port,
+					ServiceName: s.id,
 					Message:     newM,
 				}); err != nil {
 					return err
 				}
-				grpclog.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.port, incomingMessage.ServiceName))
+				grpclog.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.id, incomingMessage.ServiceName))
 			}
 		}
 	}

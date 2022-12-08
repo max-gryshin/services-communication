@@ -6,14 +6,12 @@ import (
 	myServer "servicesCommunication/internal/server"
 	"servicesCommunication/internal/service"
 	"servicesCommunication/internal/setting"
-	"servicesCommunication/internal/utils"
 	"sync"
 	"time"
 )
 
 func main() {
-	settings := setting.LoadSetting()
-	utils.SetUpUtils(settings.App.ServiceName, settings.ServerConfig.PortMin)
+	settings := setting.NewSetting()
 	grpclog.Setup(&settings.App)
 	defer func() {
 		err := grpclog.Close()
@@ -21,14 +19,14 @@ func main() {
 			log.Print(err)
 		}
 	}()
-	srv := myServer.NewServer(settings.ServerConfig.Port, settings.ServerConfig.FrequencyCommunication)
+	srv := myServer.NewServer(settings.App.ServiceName, settings.ServerConfig.FrequencyCommunication)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		srv.Serve(settings.ServerConfig.Port)
 	}()
-	neighbors := service.NewNode(settings.ServerConfig.Port, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
+	neighbors := service.NewNode(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
 	go func() {
 		ticker := time.NewTicker(settings.ServerConfig.FrequencyCommunication)
 		count := 0

@@ -10,27 +10,26 @@ import (
 	"servicesCommunication/internal/grpclog"
 	"servicesCommunication/internal/server"
 	"servicesCommunication/internal/utils"
-	"strconv"
 	"sync"
 	"time"
 )
 
 type Node struct {
-	serviceID     string
-	portsToLookUp []int
-	opts          []grpc.DialOption
-	frequency     time.Duration
-	timeout       time.Duration
-	server        *server.Server
+	serviceID string
+	Nodes     []string
+	opts      []grpc.DialOption
+	frequency time.Duration
+	timeout   time.Duration
+	server    *server.Server
 }
 
-func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *server.Server) *Node {
+func NewNode(id string, Nodes []string, frequency time.Duration, server *server.Server) *Node {
 	nf := Node{
-		serviceID:     id,
-		portsToLookUp: portsToLookUp,
-		frequency:     frequency,
-		timeout:       time.Second * 10,
-		server:        server,
+		serviceID: id,
+		Nodes:     Nodes,
+		frequency: frequency,
+		timeout:   time.Second * 10,
+		server:    server,
 	}
 	nf.opts = append(
 		nf.opts,
@@ -45,10 +44,9 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 				ticker.Stop()
 				break
 			}
-			for _, p := range nf.portsToLookUp {
-				port := strconv.Itoa(p)
+			for _, node := range nf.Nodes {
 				nf.server.Mutex.Lock()
-				if status, ok := nf.server.StatusMap[port]; ok {
+				if status, ok := nf.server.StatusMap[node]; ok {
 					if status == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED ||
 						status == serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED {
 						nf.server.Mutex.Unlock()
@@ -58,8 +56,8 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 				nf.server.Mutex.Unlock()
 				wg.Add(1)
 				count++
-				go func(waitGroup *sync.WaitGroup, port string) {
-					conn, err := grpc.Dial(utils.GetServiceName(port), nf.opts...)
+				go func(waitGroup *sync.WaitGroup, serviceName string) {
+					conn, err := grpc.Dial(serviceName, nf.opts...)
 					if err != nil {
 						grpclog.Error(err.Error())
 					} else {
@@ -71,10 +69,10 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 							return
 						}
 						if err != nil {
-							grpclog.Error(fmt.Sprintf("Can not connect grpc server: %s, code: %s", port, err.Error()))
+							grpclog.Error(fmt.Sprintf("Can not connect grpc server: %s, code: %s", serviceName, err.Error()))
 						}
 						nf.server.Mutex.Lock()
-						nf.server.StatusMap[port] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
+						nf.server.StatusMap[serviceName] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
 						nf.server.Mutex.Unlock()
 					}
 					defer func() {
@@ -86,7 +84,7 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 							}
 						}
 					}()
-				}(&wg, port)
+				}(&wg, node)
 			}
 			wg.Wait()
 		}
@@ -95,13 +93,12 @@ func NewNode(id string, portsToLookUp []int, frequency time.Duration, server *se
 }
 
 func (n *Node) LookUp() {
-	for port, neighborSync := range n.server.StatusMap {
-		if neighborSync == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED || n.serviceID == port {
+	for serviceName, neighborSync := range n.server.StatusMap {
+		if neighborSync == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED || n.serviceID == serviceName {
 			continue
 		}
-		p := port
-		go func(port string) {
-			conn, err := grpc.Dial(utils.GetServiceName(port), n.opts...)
+		go func(serviceName string) {
+			conn, err := grpc.Dial(serviceName, n.opts...)
 			if err != nil {
 				grpclog.Error(err)
 			}
@@ -110,20 +107,20 @@ func (n *Node) LookUp() {
 				return
 			}
 			n.server.Mutex.Lock()
-			n.server.StatusMap[port] = serviceGrpc.HealthCheckResponse_SERVING_CONNECTED
-			n.communicate(client, port)
+			n.server.StatusMap[serviceName] = serviceGrpc.HealthCheckResponse_SERVING_CONNECTED
+			n.communicate(client, serviceName)
 			n.disconnected(client)
-			n.server.StatusMap[port] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
+			n.server.StatusMap[serviceName] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
 			defer func(conn *grpc.ClientConn) {
 				err = conn.Close()
 				if err != nil {
 					grpclog.Error(err)
 				}
-				grpclog.Info(fmt.Sprintf("End connection with %s", port))
-				n.server.StatusMap[port] = serviceGrpc.HealthCheckResponse_NOT_SERVING
+				grpclog.Info(fmt.Sprintf("End connection with %s", serviceName))
+				n.server.StatusMap[serviceName] = serviceGrpc.HealthCheckResponse_NOT_SERVING
 				n.server.Mutex.Unlock()
 			}(conn)
-		}(p)
+		}(serviceName)
 	}
 }
 

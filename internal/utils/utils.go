@@ -2,7 +2,7 @@ package utils
 
 import (
 	"math/rand"
-	"strconv"
+	"net"
 	"time"
 )
 
@@ -13,16 +13,8 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-var n string
-var pMin int
-
 func init() {
 	rand.Seed(time.Now().UnixNano())
-}
-
-func SetUpUtils(appName string, portMin int) {
-	n = appName
-	pMin = portMin
 }
 
 func RandStringBytesMask(n int) string {
@@ -51,8 +43,18 @@ func GetRandStrings(n int, length int) []string {
 	return res
 }
 
-func GetServiceName(port string) string {
-	portInt, _ := strconv.Atoi(port)
-
-	return n + strconv.Itoa(portInt-pMin) + ":" + port
+func GetLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		// check the address type and if it is not a loopback the display it
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
 }

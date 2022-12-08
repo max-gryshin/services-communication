@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"path/filepath"
 	"servicesCommunication/internal/file"
+	"servicesCommunication/internal/utils"
 	"strconv"
 	"time"
 )
@@ -21,9 +23,7 @@ type App struct {
 // ServerSetting is a structure for storage user_protobuf configuration
 type ServerSetting struct {
 	RunMode                string
-	Host                   string
 	Port                   string
-	PortHTTP               string
 	FrequencyCommunication time.Duration
 	PortMin                int
 	PortMax                int
@@ -40,44 +40,43 @@ type NodeSetting struct {
 // Setting is a structure for storage all settings
 type Setting struct {
 	ServerConfig ServerSetting
-	Nodes        []int
+	Nodes        []string
 	App          App
 }
 
-// LoadSetting loads configuration from env variables
-func LoadSetting() *Setting {
-	portFrom, err := strconv.Atoi(getEnv("APP_PORT_FROM"))
-	if err != nil {
-		fmt.Errorf("cannot get port of first node: %s", err.Error())
-	}
-	portTo, err := strconv.Atoi(getEnv("APP_PORT_TO"))
-	if err != nil {
-		fmt.Errorf("cannot get port of last node: %s", err.Error())
-	}
-	nodes := make([]int, 0, portTo-portFrom)
-	for i := portFrom; i <= portTo; i++ {
-		if strconv.Itoa(i) == getEnv("APP_PORT") {
-			continue
+// NewSetting loads configuration from env variables
+func NewSetting() *Setting {
+	nodeCount, _ := strconv.Atoi(getEnv("NODE_COUNT"))
+	nodeNames := make([]string, 0, nodeCount-1)
+	port := getEnv("APP_PORT")
+	var serviceName string
+	for i := 1; i <= nodeCount; i++ {
+		nodeName := fmt.Sprintf("%s%d:%s", getEnv("APP_SERVICE"), i, port)
+		tcpAddr, err := net.ResolveTCPAddr("tcp", nodeName)
+		if err != nil {
+			os.Exit(1)
 		}
-		nodes = append(nodes, i)
+		if tcpAddr.IP.String() != utils.GetLocalIP() {
+			nodeNames = append(nodeNames, nodeName)
+		} else {
+			serviceName = nodeName
+		}
 	}
 
-	return &Setting{
+	s := Setting{
 		ServerConfig: ServerSetting{
-			Host:                   getEnv("APP_HOST"),
-			Port:                   getEnv("APP_PORT"),
-			PortMin:                portFrom,
-			PortMax:                portTo,
-			PortHTTP:               getEnv("APP_PORT_HTTP"),
+			Port:                   port,
 			FrequencyCommunication: time.Second * 5,
 		},
-		Nodes: nodes,
+		Nodes: nodeNames,
 		App: App{
 			os.Stdout, // getFileLog
 			".",
-			getEnv("APP_SERVICE"),
+			serviceName,
 		},
 	}
+
+	return &s
 }
 
 // Simple helper function to read an environment or return a default value
