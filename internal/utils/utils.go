@@ -43,6 +43,10 @@ func GetRandStrings(n int, length int) []string {
 	return res
 }
 
+func GetRandDuration(min int, max int) time.Duration {
+	return time.Duration(rand.Intn(max-min+1) + min)
+}
+
 func GetLocalIP() string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {

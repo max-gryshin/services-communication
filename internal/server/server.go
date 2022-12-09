@@ -19,20 +19,22 @@ import (
 type Server struct {
 	id                       string
 	frequencyOfCommunication time.Duration
-	Mutex                    sync.Mutex
+	Mutex                    sync.RWMutex
 	StatusMap                map[string]serviceGrpc.HealthCheckResponse_Status
 	serviceGrpc.UnimplementedServiceCommunicatorServer
 }
 
-func NewServer(id string, freq time.Duration) *Server {
+func NewServer(id string, nodes []string, freq time.Duration) *Server {
 	statusMap := make(map[string]serviceGrpc.HealthCheckResponse_Status)
-	statusMap[id] = serviceGrpc.HealthCheckResponse_NOT_SERVING
+	for _, node := range nodes {
+		statusMap[node] = serviceGrpc.HealthCheckResponse_NOT_SERVING
+	}
 
 	s := Server{
 		id:                       id,
 		frequencyOfCommunication: freq,
 		StatusMap:                statusMap,
-		Mutex:                    sync.Mutex{},
+		Mutex:                    sync.RWMutex{},
 	}
 
 	return &s
@@ -53,14 +55,8 @@ func (s *Server) Serve(port string) {
 }
 
 func (s *Server) HealthCheck(ctx context.Context, in *serviceGrpc.HealthCheckRequest) (*serviceGrpc.HealthCheckResponse, error) {
-	s.Mutex.Lock()
-	defer s.Mutex.Unlock()
-	if in.Service == "" {
-		// check the Server overall health status.
-		return &serviceGrpc.HealthCheckResponse{
-			Status: serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED,
-		}, nil
-	}
+	s.Mutex.RLock()
+	defer s.Mutex.RUnlock()
 	if servingStatus, ok := s.StatusMap[in.Service]; ok {
 		return &serviceGrpc.HealthCheckResponse{
 			Status: servingStatus,
@@ -72,7 +68,6 @@ func (s *Server) HealthCheck(ctx context.Context, in *serviceGrpc.HealthCheckReq
 func (s *Server) Connected(ctx context.Context, in *serviceGrpc.HealthCheckRequest) (*serviceGrpc.ServeResponse, error) {
 	s.Mutex.Lock()
 	defer s.Mutex.Unlock()
-
 	if serviceStatus, ok := s.StatusMap[in.Service]; ok {
 		if serviceStatus == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED {
 			return &serviceGrpc.ServeResponse{Ok: true}, nil

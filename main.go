@@ -19,13 +19,15 @@ func main() {
 			log.Print(err)
 		}
 	}()
-	srv := myServer.NewServer(settings.App.ServiceName, settings.ServerConfig.FrequencyCommunication)
+	srv := myServer.NewServer(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		srv.Serve(settings.ServerConfig.Port)
 	}()
+	// server need to start
+	time.Sleep(time.Second)
 	neighbors := service.NewNode(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
 	go func() {
 		ticker := time.NewTicker(settings.ServerConfig.FrequencyCommunication)

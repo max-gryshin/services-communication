@@ -7,7 +7,7 @@ services:
       context: ./
     image: "${APP_IMAGE}:${APP_IMAGE_TAG}"
     deploy:
-      replicas: 5
+      replicas: 15
       restart_policy:
         condition: on-failure
         delay: 5s

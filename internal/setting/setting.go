@@ -50,10 +50,13 @@ func NewSetting() *Setting {
 	nodeNames := make([]string, 0, nodeCount-1)
 	port := getEnv("APP_PORT")
 	var serviceName string
+	// need a time to set up another nodes
+	time.Sleep(time.Second)
 	for i := 1; i <= nodeCount; i++ {
 		nodeName := fmt.Sprintf("%s%d:%s", getEnv("APP_SERVICE"), i, port)
 		tcpAddr, err := net.ResolveTCPAddr("tcp", nodeName)
 		if err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 		if tcpAddr.IP.String() != utils.GetLocalIP() {
@@ -66,7 +69,7 @@ func NewSetting() *Setting {
 	s := Setting{
 		ServerConfig: ServerSetting{
 			Port:                   port,
-			FrequencyCommunication: time.Second * 5,
+			FrequencyCommunication: time.Second * utils.GetRandDuration(1, 3),
 		},
 		Nodes: nodeNames,
 		App: App{
