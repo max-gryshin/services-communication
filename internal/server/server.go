@@ -88,7 +88,7 @@ func (s *Server) Disconnected(ctx context.Context, in *serviceGrpc.HealthCheckRe
 	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
-func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandStringServer) error {
+func (s *Server) SendRandStringStream(stream serviceGrpc.ServiceCommunicator_SendRandStringStreamServer) error {
 	for {
 		incomingMessage, err := stream.Recv()
 		if err == io.EOF {
@@ -116,4 +116,14 @@ func (s *Server) SendRandString(stream serviceGrpc.ServiceCommunicator_SendRandS
 	}
 
 	return nil
+}
+
+func (s *Server) SendRandString(ctx context.Context, in *serviceGrpc.Message) (*serviceGrpc.Message, error) {
+	grpclog.Info(fmt.Sprintf("Server: receive %s from %s ", in.Message, in.ServiceName))
+	newM := in.Message + "-" + utils.RandStringBytesMask(10)
+	grpclog.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.id, in.ServiceName))
+	return &serviceGrpc.Message{
+		ServiceName: s.id,
+		Message:     newM,
+	}, nil
 }

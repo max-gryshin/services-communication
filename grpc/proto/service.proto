@@ -31,7 +31,8 @@ message ServeResponse {
 }
 
 service ServiceCommunicator {
-  rpc SendRandString(stream Message) returns (stream Message) {}
+  rpc SendRandStringStream(stream Message) returns (stream Message) {}
+  rpc SendRandString(Message) returns (Message) {}
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
   rpc Connected(HealthCheckRequest) returns (ServeResponse);
   rpc Disconnected(HealthCheckRequest) returns (ServeResponse);

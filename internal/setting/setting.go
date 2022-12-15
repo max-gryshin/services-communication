@@ -25,8 +25,7 @@ type ServerSetting struct {
 	RunMode                string
 	Port                   string
 	FrequencyCommunication time.Duration
-	PortMin                int
-	PortMax                int
+	NodeCountByDefault     int
 	// ReadTimeout  time.Duration
 	// WriteTimeout time.Duration
 	// Path string
@@ -51,7 +50,7 @@ func NewSetting() *Setting {
 	port := getEnv("APP_PORT")
 	var serviceName string
 	// need a time to set up another nodes
-	time.Sleep(time.Second)
+	time.Sleep(time.Second * time.Duration(nodeCount))
 	for i := 1; i <= nodeCount; i++ {
 		nodeName := fmt.Sprintf("%s%d:%s", getEnv("APP_SERVICE"), i, port)
 		tcpAddr, err := net.ResolveTCPAddr("tcp", nodeName)
@@ -70,6 +69,7 @@ func NewSetting() *Setting {
 		ServerConfig: ServerSetting{
 			Port:                   port,
 			FrequencyCommunication: time.Second * utils.GetRandDuration(1, 3),
+			NodeCountByDefault:     nodeCount,
 		},
 		Nodes: nodeNames,
 		App: App{

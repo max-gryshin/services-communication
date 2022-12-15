@@ -26,8 +26,8 @@ func main() {
 		defer wg.Done()
 		srv.Serve(settings.ServerConfig.Port)
 	}()
-	// server need to start
-	time.Sleep(time.Second)
+	// another servers need a time to start
+	time.Sleep(time.Second * time.Duration(settings.ServerConfig.NodeCountByDefault/2))
 	neighbors := service.NewNode(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
 	go func() {
 		ticker := time.NewTicker(settings.ServerConfig.FrequencyCommunication)

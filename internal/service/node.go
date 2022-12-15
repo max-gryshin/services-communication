@@ -130,10 +130,10 @@ func (n *Node) LookUp() {
 	}
 }
 
-func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, serviceID string) {
+func (n *Node) communicateByStream(client serviceGrpc.ServiceCommunicatorClient, serviceID string) {
 	ctx, cancel := context.WithTimeout(context.Background(), n.timeout)
 	defer cancel()
-	stream, err := client.SendRandString(ctx)
+	stream, err := client.SendRandStringStream(ctx)
 	if err != nil {
 		grpclog.Error(err)
 	}
@@ -174,6 +174,21 @@ func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, service
 		return
 	}
 	<-waitc
+}
+
+func (n *Node) communicate(client serviceGrpc.ServiceCommunicatorClient, serviceID string) {
+	ctx, cancel := context.WithTimeout(context.Background(), n.timeout)
+	defer cancel()
+	m := &serviceGrpc.Message{
+		ServiceName: n.serviceID,
+		Message:     utils.RandStringBytesMask(15),
+	}
+	grpclog.Info(fmt.Sprintf("Client: sent %s to %s", m.Message, serviceID))
+	responseMessage, err := client.SendRandString(ctx, m)
+	if err != nil {
+		grpclog.Error(err)
+	}
+	grpclog.Info(fmt.Sprintf("Client: receive %s from %s", responseMessage.Message, responseMessage.ServiceName))
 }
 
 func (n *Node) connected(client serviceGrpc.ServiceCommunicatorClient) bool {
