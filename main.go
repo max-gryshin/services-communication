@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"servicesCommunication/internal/grpclog"
 	myServer "servicesCommunication/internal/server"
@@ -19,6 +20,8 @@ func main() {
 			log.Print(err)
 		}
 	}()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	srv := myServer.NewServer(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -27,19 +30,20 @@ func main() {
 		srv.Serve(settings.ServerConfig.Port)
 	}()
 	// another servers need a time to start
-	time.Sleep(time.Second * time.Duration(settings.ServerConfig.NodeCountByDefault/2))
-	neighbors := service.NewNode(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
-	go func() {
+	time.Sleep(time.Second * time.Duration(settings.ServerConfig.NodeCountByDefault))
+	neighbors := service.NewNode(ctx, settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
+	go func(ctx context.Context) {
 		ticker := time.NewTicker(settings.ServerConfig.FrequencyCommunication)
-		count := 0
-		for range ticker.C {
-			if count > 1e3 { // stop condition
+	loop:
+		for {
+			select {
+			case <-ctx.Done():
 				ticker.Stop()
-				break
+				break loop
+			case <-ticker.C:
+				neighbors.LookUp(ctx)
 			}
-			neighbors.LookUp()
-			count++
 		}
-	}()
+	}(ctx)
 	wg.Wait()
 }

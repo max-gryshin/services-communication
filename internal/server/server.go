@@ -17,24 +17,26 @@ import (
 )
 
 type Server struct {
-	id                       string
-	frequencyOfCommunication time.Duration
-	Mutex                    sync.RWMutex
-	StatusMap                map[string]serviceGrpc.HealthCheckResponse_Status
+	id         string
+	period     time.Duration
+	Mutex      sync.RWMutex
+	StatusMap  map[string]serviceGrpc.HealthCheckResponse_Status
+	grpcServer *grpc.Server
+	cancelFunc context.CancelFunc
 	serviceGrpc.UnimplementedServiceCommunicatorServer
 }
 
-func NewServer(id string, nodes []string, freq time.Duration) *Server {
+func NewServer(id string, nodes []string, period time.Duration) *Server {
 	statusMap := make(map[string]serviceGrpc.HealthCheckResponse_Status)
 	for _, node := range nodes {
 		statusMap[node] = serviceGrpc.HealthCheckResponse_NOT_SERVING
 	}
-
 	s := Server{
-		id:                       id,
-		frequencyOfCommunication: freq,
-		StatusMap:                statusMap,
-		Mutex:                    sync.RWMutex{},
+		id:         id,
+		period:     period,
+		StatusMap:  statusMap,
+		Mutex:      sync.RWMutex{},
+		grpcServer: grpc.NewServer(),
 	}
 
 	return &s
@@ -44,13 +46,12 @@ func (s *Server) Serve(port string) {
 	grpclog.Info("New Server up: " + s.id)
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		grpclog.Fatal("failed to listen: %s" + err.Error())
+		grpclog.Fatal("failed to listen: " + err.Error())
 	}
-	grpcServer := grpc.NewServer()
-	serviceGrpc.RegisterServiceCommunicatorServer(grpcServer, s)
-	reflection.Register(grpcServer)
-	if err = grpcServer.Serve(lis); err != nil {
-		grpclog.Fatal("failed to serve: %s" + err.Error())
+	serviceGrpc.RegisterServiceCommunicatorServer(s.grpcServer, s)
+	reflection.Register(s.grpcServer)
+	if err = s.grpcServer.Serve(lis); err != nil {
+		grpclog.Fatal("failed to serve: " + err.Error())
 	}
 }
 

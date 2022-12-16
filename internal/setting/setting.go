@@ -27,7 +27,7 @@ type ServerSetting struct {
 	FrequencyCommunication time.Duration
 	NodeCountByDefault     int
 	// ReadTimeout  time.Duration
-	// WriteTimeout time.Duration
+	Timeout time.Duration
 	// Path string
 }
 
@@ -69,6 +69,7 @@ func NewSetting() *Setting {
 		ServerConfig: ServerSetting{
 			Port:                   port,
 			FrequencyCommunication: time.Second * utils.GetRandDuration(1, 3),
+			Timeout:                time.Second * 3,
 			NodeCountByDefault:     nodeCount,
 		},
 		Nodes: nodeNames,
