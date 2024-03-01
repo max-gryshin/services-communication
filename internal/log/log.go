@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/max-gryshin/services-communication/internal/setting"
+	"github.com/max-gryshin/services-communication/internal/config"
 )
 
 type Level int
@@ -32,7 +32,7 @@ const (
 )
 
 // Setup initialize the log instance
-func Setup(config *setting.App) {
+func Setup(config *config.App) {
 	logger = log.New(config.LogOut, DefaultPrefix, log.LstdFlags)
 }
 

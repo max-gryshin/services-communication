@@ -3,6 +3,7 @@ module github.com/max-gryshin/services-communication
 go 1.21.6
 
 require (
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.32.0
 )

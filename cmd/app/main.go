@@ -2,17 +2,18 @@ package main
 
 import (
 	"context"
-	grpcLog "github.com/max-gryshin/services-communication/internal/log"
-	"github.com/max-gryshin/services-communication/internal/server"
-	"github.com/max-gryshin/services-communication/internal/service"
-	"github.com/max-gryshin/services-communication/internal/setting"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/max-gryshin/services-communication/internal/config"
+	grpcLog "github.com/max-gryshin/services-communication/internal/log"
+	"github.com/max-gryshin/services-communication/internal/server/grpc"
+	"github.com/max-gryshin/services-communication/internal/service/node"
 )
 
 func main() {
-	settings := setting.NewSetting()
+	settings := config.New()
 	grpcLog.Setup(&settings.App)
 	defer func() {
 		err := grpcLog.Close()
@@ -22,16 +23,24 @@ func main() {
 	}()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	srv := server.New(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication)
+	srv := grpc.New(
+		settings.App.Name,
+		settings.ServerConfig.FrequencyCommunication,
+	)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		srv.Serve(settings.ServerConfig.Port)
 	}()
-	// another servers need a time to start
+	// another nodes need a time to start
 	time.Sleep(time.Second * time.Duration(settings.ServerConfig.NodeCountByDefault))
-	neighbors := service.NewNode(ctx, settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication, srv)
+	n := node.New(
+		ctx,
+		settings.App.Name,
+		settings.Nodes,
+		settings.ServerConfig.FrequencyCommunication,
+	)
 	go func(ctx context.Context) {
 		ticker := time.NewTicker(settings.ServerConfig.FrequencyCommunication)
 	loop:
@@ -41,7 +50,7 @@ func main() {
 				ticker.Stop()
 				break loop
 			case <-ticker.C:
-				neighbors.LookUp(ctx)
+				n.LookUp(ctx)
 			}
 		}
 	}(ctx)
