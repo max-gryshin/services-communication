@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	serviceGrpc "github.com/max-gryshin/services-communication/grpc"
-	"github.com/max-gryshin/services-communication/internal/grpclog"
+	serviceGrpc "github.com/max-gryshin/services-communication/api"
+	"github.com/max-gryshin/services-communication/internal/log"
 	"github.com/max-gryshin/services-communication/internal/server"
 	"github.com/max-gryshin/services-communication/internal/utils"
 )
@@ -41,7 +41,7 @@ func NewNode(ctx context.Context, id string, Nodes []string, frequency time.Dura
 			// todo: have a deal with it
 			case <-ctx.Done():
 				ticker.Stop()
-				grpclog.Info("SEARCH FOR NEW NODES TICKER STOPPED")
+				log.Info("SEARCH FOR NEW NODES TICKER STOPPED")
 				break loop
 			case <-ticker.C:
 				for _, node := range nf.Nodes {
@@ -55,16 +55,16 @@ func NewNode(ctx context.Context, id string, Nodes []string, frequency time.Dura
 					go func(ctx context.Context, waitGroup *sync.WaitGroup, serviceName string) {
 						conn, err := grpc.DialContext(ctx, serviceName, nf.opts...)
 						if err != nil {
-							grpclog.Error(err.Error())
+							log.Error(err.Error())
 						} else {
 							client := serviceGrpc.NewServiceCommunicatorClient(conn)
 							resp, err := client.HealthCheck(ctx, &serviceGrpc.HealthCheckRequest{})
 							if err != nil {
-								grpclog.Error(fmt.Sprintf("Can not connect grpc server: %s, code: %s", serviceName, err.Error()))
+								log.Error(fmt.Sprintf("Can not connect api server: %s, code: %s", serviceName, err.Error()))
 								return
 							}
 							if resp == nil {
-								grpclog.Error("grpc server response is nil")
+								log.Error("api server response is nil")
 								return
 							}
 							nf.server.Mutex.Lock()
@@ -76,7 +76,7 @@ func NewNode(ctx context.Context, id string, Nodes []string, frequency time.Dura
 							if conn != nil {
 								err = conn.Close()
 								if err != nil {
-									grpclog.Error(err)
+									log.Error(err)
 								}
 							}
 						}()
@@ -100,12 +100,12 @@ func (n *Node) LookUp(ctx context.Context) {
 		go func(ctx context.Context, wg *sync.WaitGroup, serviceName string) {
 			conn, err := grpc.DialContext(ctx, serviceName, n.opts...)
 			if err != nil {
-				grpclog.Error(err)
+				log.Error(err)
 				return
 			}
 			client := serviceGrpc.NewServiceCommunicatorClient(conn)
 			if n.connected(ctx, client) {
-				grpclog.Info(fmt.Sprintf("Already connected with %s", serviceName))
+				log.Info(fmt.Sprintf("Already connected with %s", serviceName))
 				return
 			}
 			n.server.Mutex.Lock()
@@ -117,9 +117,9 @@ func (n *Node) LookUp(ctx context.Context) {
 				wg.Done()
 				err = conn.Close()
 				if err != nil {
-					grpclog.Error(err)
+					log.Error(err)
 				}
-				grpclog.Info(fmt.Sprintf("End connection with %s", serviceName))
+				log.Info(fmt.Sprintf("End connection with %s", serviceName))
 				n.server.Mutex.Unlock()
 			}(conn)
 		}(ctx, &wg, serviceName)
@@ -130,7 +130,7 @@ func (n *Node) LookUp(ctx context.Context) {
 func (n *Node) communicateByStream(ctx context.Context, client serviceGrpc.ServiceCommunicatorClient, serviceID string) {
 	stream, err := client.SendRandStringStream(ctx)
 	if err != nil {
-		grpclog.Error(err)
+		log.Error(err)
 	}
 	waitc := make(chan struct{})
 	go func() {
@@ -142,13 +142,13 @@ func (n *Node) communicateByStream(ctx context.Context, client serviceGrpc.Servi
 				return
 			}
 			if errRecv != nil {
-				grpclog.Error(errRecv)
+				log.Error(errRecv)
 			}
 			if myMessage == nil {
 				continue
 			}
 			if myMessage.Message != "" {
-				grpclog.Info(fmt.Sprintf("Client: receive %s from %s", myMessage.Message, myMessage.ServiceName))
+				log.Info(fmt.Sprintf("Client: receive %s from %s", myMessage.Message, myMessage.ServiceName))
 			}
 		}
 	}()
@@ -158,10 +158,10 @@ func (n *Node) communicateByStream(ctx context.Context, client serviceGrpc.Servi
 			Message:     message,
 		}
 		if err = stream.Send(m); err != nil {
-			grpclog.Error(fmt.Sprintf("Client: failed %s", err.Error()))
+			log.Error(fmt.Sprintf("Client: failed %s", err.Error()))
 		}
 		if m.Message != "" {
-			grpclog.Info(fmt.Sprintf("Client: sent %s to %s", m.Message, serviceID))
+			log.Info(fmt.Sprintf("Client: sent %s to %s", m.Message, serviceID))
 		}
 	}
 	err = stream.CloseSend()
@@ -178,23 +178,23 @@ func (n *Node) communicate(ctx context.Context, client serviceGrpc.ServiceCommun
 	}
 	responseMessage, err := client.SendRandString(ctx, m)
 	if responseMessage == nil {
-		grpclog.Error(fmt.Sprintf("resp from %s is nil", serviceID))
+		log.Error(fmt.Sprintf("resp from %s is nil", serviceID))
 	}
 	if err != nil {
-		grpclog.Error(err)
+		log.Error(err)
 	}
-	grpclog.Info(fmt.Sprintf("Client: sent %s to %s", m.Message, serviceID))
-	grpclog.Info(fmt.Sprintf("Client: receive %s from %s", responseMessage.Message, responseMessage.ServiceName))
+	log.Info(fmt.Sprintf("Client: sent %s to %s", m.Message, serviceID))
+	log.Info(fmt.Sprintf("Client: receive %s from %s", responseMessage.Message, responseMessage.ServiceName))
 }
 
 func (n *Node) connected(ctx context.Context, client serviceGrpc.ServiceCommunicatorClient) bool {
 	resp, err := client.Connected(ctx, &serviceGrpc.HealthCheckRequest{Service: n.serviceID})
 	if resp == nil {
-		grpclog.Error("Can not notify about connect")
+		log.Error("Can not notify about connect")
 		return false
 	}
 	if err != nil {
-		grpclog.Error(fmt.Sprintf("Marking a connect: %s", err.Error()))
+		log.Error(fmt.Sprintf("Marking a connect: %s", err.Error()))
 	}
 
 	return resp.Ok
@@ -203,10 +203,10 @@ func (n *Node) connected(ctx context.Context, client serviceGrpc.ServiceCommunic
 func (n *Node) disconnected(ctx context.Context, client serviceGrpc.ServiceCommunicatorClient) {
 	resp, err := client.Disconnected(ctx, &serviceGrpc.HealthCheckRequest{Service: n.serviceID})
 	if resp == nil || resp.Ok == false {
-		grpclog.Error("Can not notify about disconnect")
+		log.Error("Can not notify about disconnect")
 		return
 	}
 	if err != nil {
-		grpclog.Error(fmt.Sprintf("Marking a disconnect: %s", err.Error()))
+		log.Error(fmt.Sprintf("Marking a disconnect: %s", err.Error()))
 	}
 }

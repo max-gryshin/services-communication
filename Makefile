@@ -35,7 +35,6 @@ gen-proto:
 	# MacOS: brew install protobuf
 	# Linux: sudo apt-get install protobuf-compiler
 	#go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
-	#go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2 && \
-	protoc --proto_path=grpc --go_out=. grpc/proto/service.proto && \
-	protoc --proto_path=grpc --go-grpc_out=. grpc/proto/service.proto
-
+	#go install google.golang.org/api/cmd/protoc-gen-go-api@v1.2 && \
+	cd ./api/ && \
+	protoc --go_out=../ --go-grpc_out=../ proto/service.proto

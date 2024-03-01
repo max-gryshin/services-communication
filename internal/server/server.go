@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
-	serviceGrpc "github.com/max-gryshin/services-communication/grpc"
-	"github.com/max-gryshin/services-communication/internal/grpclog"
+	serviceGrpc "github.com/max-gryshin/services-communication/api"
+	"github.com/max-gryshin/services-communication/internal/log"
 	"github.com/max-gryshin/services-communication/internal/utils"
 )
 
@@ -28,7 +28,7 @@ type Server struct {
 	serviceGrpc.UnimplementedServiceCommunicatorServer
 }
 
-func NewServer(id string, nodes []string, period time.Duration) *Server {
+func New(id string, nodes []string, period time.Duration) *Server {
 	statusMap := make(map[string]serviceGrpc.HealthCheckResponse_Status)
 	for _, node := range nodes {
 		statusMap[node] = serviceGrpc.HealthCheckResponse_NOT_SERVING
@@ -45,15 +45,15 @@ func NewServer(id string, nodes []string, period time.Duration) *Server {
 }
 
 func (s *Server) Serve(port string) {
-	grpclog.Info("New Server up: " + s.id)
+	log.Info("New Server up: " + s.id)
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		grpclog.Fatal("failed to listen: " + err.Error())
+		log.Fatal("failed to listen: " + err.Error())
 	}
 	serviceGrpc.RegisterServiceCommunicatorServer(s.grpcServer, s)
 	reflection.Register(s.grpcServer)
 	if err = s.grpcServer.Serve(lis); err != nil {
-		grpclog.Fatal("failed to serve: " + err.Error())
+		log.Fatal("failed to serve: " + err.Error())
 	}
 }
 
@@ -101,7 +101,7 @@ func (s *Server) SendRandStringStream(stream serviceGrpc.ServiceCommunicator_Sen
 			return err
 		}
 		if incomingMessage.Message != "" {
-			grpclog.Info(fmt.Sprintf("Server: receive %s from %s ", incomingMessage.Message, incomingMessage.ServiceName))
+			log.Info(fmt.Sprintf("Server: receive %s from %s ", incomingMessage.Message, incomingMessage.ServiceName))
 			for _, randStr := range utils.GetRandStrings(2, 10) {
 				if randStr == "" {
 					continue
@@ -113,7 +113,7 @@ func (s *Server) SendRandStringStream(stream serviceGrpc.ServiceCommunicator_Sen
 				}); err != nil {
 					return err
 				}
-				grpclog.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.id, incomingMessage.ServiceName))
+				log.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.id, incomingMessage.ServiceName))
 			}
 		}
 	}
@@ -122,9 +122,9 @@ func (s *Server) SendRandStringStream(stream serviceGrpc.ServiceCommunicator_Sen
 }
 
 func (s *Server) SendRandString(ctx context.Context, in *serviceGrpc.Message) (*serviceGrpc.Message, error) {
-	grpclog.Info(fmt.Sprintf("Server: receive %s from %s ", in.Message, in.ServiceName))
+	log.Info(fmt.Sprintf("Server: receive %s from %s ", in.Message, in.ServiceName))
 	newM := in.Message + "-" + utils.RandStringBytesMask(10)
-	grpclog.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.id, in.ServiceName))
+	log.Info(fmt.Sprintf("Server: sent %s, from %s service to %s", newM, s.id, in.ServiceName))
 	return &serviceGrpc.Message{
 		ServiceName: s.id,
 		Message:     newM,

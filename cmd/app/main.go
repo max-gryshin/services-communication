@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/max-gryshin/services-communication/internal/grpclog"
-	myServer "github.com/max-gryshin/services-communication/internal/server"
+	grpcLog "github.com/max-gryshin/services-communication/internal/log"
+	"github.com/max-gryshin/services-communication/internal/server"
 	"github.com/max-gryshin/services-communication/internal/service"
 	"github.com/max-gryshin/services-communication/internal/setting"
 	"log"
@@ -13,16 +13,16 @@ import (
 
 func main() {
 	settings := setting.NewSetting()
-	grpclog.Setup(&settings.App)
+	grpcLog.Setup(&settings.App)
 	defer func() {
-		err := grpclog.Close()
+		err := grpcLog.Close()
 		if err != nil {
 			log.Print(err)
 		}
 	}()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	srv := myServer.NewServer(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication)
+	srv := server.New(settings.App.ServiceName, settings.Nodes, settings.ServerConfig.FrequencyCommunication)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {

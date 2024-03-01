@@ -98,7 +98,7 @@ func getFileLog() io.Writer {
 	fileName := getEnv("LOG_NAME") + "." + getEnv("LOG_EXT")
 	f, err := file.MustOpen(fileName, filePath)
 	if err != nil {
-		log.Fatalf("grpclog.Setup err: %v", err)
+		log.Fatalf("log.Setup err: %v", err)
 	}
 
 	return f
