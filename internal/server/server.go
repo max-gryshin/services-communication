@@ -3,17 +3,19 @@ package server
 import (
 	"context"
 	"fmt"
+	"io"
+	"net"
+	"sync"
+	"time"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	"io"
-	"net"
-	serviceGrpc "servicesCommunication/grpc"
-	"servicesCommunication/internal/grpclog"
-	"servicesCommunication/internal/utils"
-	"sync"
-	"time"
+
+	serviceGrpc "github.com/max-gryshin/services-communication/grpc"
+	"github.com/max-gryshin/services-communication/internal/grpclog"
+	"github.com/max-gryshin/services-communication/internal/utils"
 )
 
 type Server struct {

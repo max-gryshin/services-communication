@@ -7,10 +7,11 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"servicesCommunication/internal/file"
-	"servicesCommunication/internal/utils"
 	"strconv"
 	"time"
+
+	"github.com/max-gryshin/services-communication/internal/file"
+	"github.com/max-gryshin/services-communication/internal/utils"
 )
 
 // App is a structure for storage app configuration

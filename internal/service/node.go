@@ -3,15 +3,17 @@ package service
 import (
 	"context"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"io"
-	serviceGrpc "servicesCommunication/grpc"
-	"servicesCommunication/internal/grpclog"
-	"servicesCommunication/internal/server"
-	"servicesCommunication/internal/utils"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
+	serviceGrpc "github.com/max-gryshin/services-communication/grpc"
+	"github.com/max-gryshin/services-communication/internal/grpclog"
+	"github.com/max-gryshin/services-communication/internal/server"
+	"github.com/max-gryshin/services-communication/internal/utils"
 )
 
 type Node struct {
@@ -170,7 +172,10 @@ func (n *Node) communicateByStream(ctx context.Context, client serviceGrpc.Servi
 }
 
 func (n *Node) communicate(ctx context.Context, client serviceGrpc.ServiceCommunicatorClient, serviceID string) {
-	m := &serviceGrpc.Message{ServiceName: n.serviceID, Message: utils.RandStringBytesMask(15)}
+	m := &serviceGrpc.Message{
+		ServiceName: n.serviceID,
+		Message:     utils.RandStringBytesMask(15),
+	}
 	responseMessage, err := client.SendRandString(ctx, m)
 	if responseMessage == nil {
 		grpclog.Error(fmt.Sprintf("resp from %s is nil", serviceID))

@@ -1,10 +1,10 @@
-module servicesCommunication
+module github.com/max-gryshin/services-communication
 
-go 1.18
+go 1.21.6
 
 require (
 	google.golang.org/grpc v1.51.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.32.0
 )
 
 require (

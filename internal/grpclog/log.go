@@ -5,8 +5,9 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"servicesCommunication/internal/setting"
 	"time"
+
+	"github.com/max-gryshin/services-communication/internal/setting"
 )
 
 type Level int

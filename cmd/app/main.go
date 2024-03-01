@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"github.com/max-gryshin/services-communication/internal/grpclog"
+	myServer "github.com/max-gryshin/services-communication/internal/server"
+	"github.com/max-gryshin/services-communication/internal/service"
+	"github.com/max-gryshin/services-communication/internal/setting"
 	"log"
-	"servicesCommunication/internal/grpclog"
-	myServer "servicesCommunication/internal/server"
-	"servicesCommunication/internal/service"
-	"servicesCommunication/internal/setting"
 	"sync"
 	"time"
 )
