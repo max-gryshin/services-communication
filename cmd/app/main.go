@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"log"
-	"sync"
-	"time"
+	"syscall"
 
+	"github.com/max-gryshin/services-communication/internal/closer"
 	"github.com/max-gryshin/services-communication/internal/config"
 	grpcLog "github.com/max-gryshin/services-communication/internal/log"
 	"github.com/max-gryshin/services-communication/internal/server/grpc"
@@ -13,46 +13,32 @@ import (
 )
 
 func main() {
-	settings := config.New()
-	grpcLog.Setup(&settings.App)
+	configs := config.New()
+
+	grpcLog.Setup(&configs.App)
 	defer func() {
 		err := grpcLog.Close()
 		if err != nil {
 			log.Print(err)
 		}
 	}()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	srv := grpc.New(
-		settings.App.Name,
-		settings.ServerConfig.FrequencyCommunication,
+
+	incomeConnectionsCloser := closer.New(syscall.SIGTERM, syscall.SIGINT, syscall.SIGKILL)
+	outcomeConnectionsCloser := closer.New()
+
+	resources := &grpc.Resources{
+		Node: node.New(ctx, configs),
+	}
+	grpcServer := grpc.New(
+		configs,
+		resources,
 	)
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		srv.Serve(settings.ServerConfig.Port)
-	}()
-	// another nodes need a time to start
-	time.Sleep(time.Second * time.Duration(settings.ServerConfig.NodeCountByDefault))
-	n := node.New(
-		ctx,
-		settings.App.Name,
-		settings.Nodes,
-		settings.ServerConfig.FrequencyCommunication,
-	)
-	go func(ctx context.Context) {
-		ticker := time.NewTicker(settings.ServerConfig.FrequencyCommunication)
-	loop:
-		for {
-			select {
-			case <-ctx.Done():
-				ticker.Stop()
-				break loop
-			case <-ticker.C:
-				n.LookUp(ctx)
-			}
-		}
-	}(ctx)
-	wg.Wait()
+	grpcServer.Run()
+
+	incomeConnectionsCloser.Add(grpcServer.Stop)
+	incomeConnectionsCloser.Wait()
+	outcomeConnectionsCloser.CloseAll()
 }

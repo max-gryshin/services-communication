@@ -7,12 +7,14 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/exp/maps"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
-	serviceGrpc "github.com/max-gryshin/services-communication/api"
+	grpcApi "github.com/max-gryshin/services-communication/api"
+	"github.com/max-gryshin/services-communication/internal/config"
 	"github.com/max-gryshin/services-communication/internal/log"
 	"github.com/max-gryshin/services-communication/internal/utils"
 )
@@ -21,32 +23,28 @@ type Node struct {
 	ID           string
 	Nodes        []string
 	Mutex        sync.RWMutex
-	NodeStatuses map[string]serviceGrpc.HealthCheckResponse_Status
+	NodeStatuses map[string]grpcApi.HealthCheckResponse_Status
 	opts         []grpc.DialOption
-	frequency    time.Duration
+	grpcApi.UnimplementedNodeServer
 }
 
 func New(
 	ctx context.Context,
-	ID string,
-	Nodes []string,
-	frequency time.Duration,
+	config *config.Config,
 ) *Node {
-	nStatuses := make(map[string]serviceGrpc.HealthCheckResponse_Status)
-	for _, node := range Nodes {
-		nStatuses[node] = serviceGrpc.HealthCheckResponse_NOT_SERVING
+	nStatuses := make(map[string]grpcApi.HealthCheckResponse_Status)
+	for _, node := range config.Nodes {
+		nStatuses[node] = grpcApi.HealthCheckResponse_NOT_SERVING
 	}
-	nf := Node{
-		ID:           ID,
-		Nodes:        Nodes,
+	n := &Node{
+		ID:           config.App.Name,
 		NodeStatuses: nStatuses,
 		Mutex:        sync.RWMutex{},
-		frequency:    frequency,
 	}
-	nf.opts = append(nf.opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	n.opts = append(n.opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	go func(ctx context.Context) {
 		wg := sync.WaitGroup{}
-		ticker := time.NewTicker(nf.frequency)
+		ticker := time.NewTicker(config.ServerConfig.FrequencyCommunication)
 	LOOP:
 		for {
 			select {
@@ -56,33 +54,16 @@ func New(
 				log.Info("SEARCH FOR NEW NODES TICKER STOPPED")
 				break LOOP
 			case <-ticker.C:
-				for _, node := range nf.Nodes {
-					if status, ok := nf.NodeStatuses[node]; ok {
-						if status == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED ||
-							status == serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED {
+				for _, node := range maps.Keys(n.NodeStatuses) {
+					if status, ok := n.NodeStatuses[node]; ok {
+						if status == grpcApi.HealthCheckResponse_SERVING_CONNECTED ||
+							status == grpcApi.HealthCheckResponse_SERVING_NOT_CONNECTED {
 							continue
 						}
 					}
 					wg.Add(1)
 					go func(ctx context.Context, waitGroup *sync.WaitGroup, serviceName string) {
-						conn, err := grpc.DialContext(ctx, serviceName, nf.opts...)
-						if err != nil {
-							log.Error(err.Error())
-						} else {
-							client := serviceGrpc.NewNodeClient(conn)
-							resp, err := client.HealthCheck(ctx, &serviceGrpc.HealthCheckRequest{})
-							if err != nil {
-								log.Error(fmt.Sprintf("Can not connect api server: %s, code: %s", serviceName, err.Error()))
-								return
-							}
-							if resp == nil {
-								log.Error("api server response is nil")
-								return
-							}
-							nf.Mutex.Lock()
-							nf.NodeStatuses[serviceName] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
-							nf.Mutex.Unlock()
-						}
+						conn, err := grpc.DialContext(ctx, serviceName, n.opts...)
 						defer func() {
 							waitGroup.Done()
 							if conn != nil {
@@ -92,53 +73,85 @@ func New(
 								}
 							}
 						}()
+						if err != nil {
+							log.Error(err.Error())
+						}
+						client := grpcApi.NewNodeClient(conn)
+						resp, err := client.HealthCheck(ctx, &grpcApi.HealthCheckRequest{})
+						if err != nil {
+							log.Error(
+								fmt.Sprintf("Can not connect api server: %s, code: %s", serviceName, err.Error()),
+							)
+							return
+						}
+						if resp == nil {
+							log.Error("api server response is nil")
+							return
+						}
+						n.Mutex.Lock()
+						n.NodeStatuses[serviceName] = grpcApi.HealthCheckResponse_SERVING_NOT_CONNECTED
+						n.Mutex.Unlock()
 					}(ctx, &wg, node)
 				}
 				wg.Wait()
 			}
 		}
 	}(ctx)
-	return &nf
+	go func(ctx context.Context) {
+		ticker := time.NewTicker(config.ServerConfig.FrequencyCommunication)
+	LOOP:
+		for {
+			select {
+			case <-ctx.Done():
+				ticker.Stop()
+				break LOOP
+			case <-ticker.C:
+				n.LookUp(ctx)
+			}
+		}
+	}(ctx)
+
+	return n
 }
 
-func (n *Node) HealthCheck(_ context.Context, in *serviceGrpc.HealthCheckRequest) (*serviceGrpc.HealthCheckResponse, error) {
+func (n *Node) HealthCheck(_ context.Context, in *grpcApi.HealthCheckRequest) (*grpcApi.HealthCheckResponse, error) {
 	n.Mutex.RLock()
 	defer n.Mutex.RUnlock()
 	if servingStatus, ok := n.NodeStatuses[in.Node]; ok {
-		return &serviceGrpc.HealthCheckResponse{
+		return &grpcApi.HealthCheckResponse{
 			Status: servingStatus,
 		}, nil
 	}
 	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
-func (n *Node) Connected(ctx context.Context, in *serviceGrpc.HealthCheckRequest) (*serviceGrpc.ServeResponse, error) {
+func (n *Node) Connected(_ context.Context, in *grpcApi.HealthCheckRequest) (*grpcApi.ServeResponse, error) {
 	n.Mutex.Lock()
 	defer n.Mutex.Unlock()
 	if serviceStatus, ok := n.NodeStatuses[in.Node]; ok {
-		if serviceStatus == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED {
-			return &serviceGrpc.ServeResponse{Ok: true}, nil
+		if serviceStatus == grpcApi.HealthCheckResponse_SERVING_CONNECTED {
+			return &grpcApi.ServeResponse{Ok: true}, nil
 		}
-		n.NodeStatuses[in.Node] = serviceGrpc.HealthCheckResponse_SERVING_CONNECTED
-		return &serviceGrpc.ServeResponse{Ok: false}, nil
+		n.NodeStatuses[in.Node] = grpcApi.HealthCheckResponse_SERVING_CONNECTED
+		return &grpcApi.ServeResponse{Ok: false}, nil
 	}
 	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
 func (n *Node) Disconnected(
 	_ context.Context,
-	in *serviceGrpc.HealthCheckRequest,
-) (*serviceGrpc.ServeResponse, error) {
+	in *grpcApi.HealthCheckRequest,
+) (*grpcApi.ServeResponse, error) {
 	n.Mutex.Lock()
 	defer n.Mutex.Unlock()
 	if _, ok := n.NodeStatuses[in.Node]; ok {
-		n.NodeStatuses[in.Node] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
-		return &serviceGrpc.ServeResponse{Ok: true}, nil
+		n.NodeStatuses[in.Node] = grpcApi.HealthCheckResponse_SERVING_NOT_CONNECTED
+		return &grpcApi.ServeResponse{Ok: true}, nil
 	}
 	return nil, status.Error(codes.NotFound, "unknown service")
 }
 
-func (n *Node) SendStream(stream serviceGrpc.Node_SendStreamServer) error {
+func (n *Node) SendStream(stream grpcApi.Node_SendStreamServer) error {
 	for {
 		incomingMessage, err := stream.Recv()
 		if err == io.EOF {
@@ -156,7 +169,7 @@ func (n *Node) SendStream(stream serviceGrpc.Node_SendStreamServer) error {
 					continue
 				}
 				newM := incomingMessage.Message + "-" + randStr
-				if err = stream.Send(&serviceGrpc.Message{
+				if err = stream.Send(&grpcApi.Message{
 					Name:    n.ID,
 					Message: newM,
 				}); err != nil {
@@ -172,11 +185,11 @@ func (n *Node) SendStream(stream serviceGrpc.Node_SendStreamServer) error {
 	return nil
 }
 
-func (n *Node) SendRandString(ctx context.Context, in *serviceGrpc.Message) (*serviceGrpc.Message, error) {
+func (n *Node) Send(_ context.Context, in *grpcApi.Message) (*grpcApi.Message, error) {
 	log.Info(fmt.Sprintf("GRPCServer: receive %s from %s ", in.Message, in.Name))
 	newM := in.Message + "-" + utils.RandStringBytesMask(10)
 	log.Info(fmt.Sprintf("GRPCServer: sent %s, from %s service to %s", newM, n.ID, in.Name))
-	return &serviceGrpc.Message{
+	return &grpcApi.Message{
 		Name:    n.ID,
 		Message: newM,
 	}, nil
@@ -186,7 +199,7 @@ func (n *Node) LookUp(ctx context.Context) {
 	// wait group will wait until we finish look up process
 	wg := sync.WaitGroup{}
 	for serviceName, neighborSync := range n.NodeStatuses {
-		if neighborSync == serviceGrpc.HealthCheckResponse_SERVING_CONNECTED {
+		if neighborSync == grpcApi.HealthCheckResponse_SERVING_CONNECTED {
 			continue
 		}
 		wg.Add(1)
@@ -196,16 +209,16 @@ func (n *Node) LookUp(ctx context.Context) {
 				log.Error(err)
 				return
 			}
-			client := serviceGrpc.NewNodeClient(conn)
+			client := grpcApi.NewNodeClient(conn)
 			if n.connected(ctx, client) {
 				log.Info(fmt.Sprintf("Already connected with %s", serviceName))
 				return
 			}
 			n.Mutex.Lock()
-			n.NodeStatuses[serviceName] = serviceGrpc.HealthCheckResponse_SERVING_CONNECTED
+			n.NodeStatuses[serviceName] = grpcApi.HealthCheckResponse_SERVING_CONNECTED
 			n.communicate(ctx, client, serviceName)
 			n.disconnected(ctx, client)
-			n.NodeStatuses[serviceName] = serviceGrpc.HealthCheckResponse_SERVING_NOT_CONNECTED
+			n.NodeStatuses[serviceName] = grpcApi.HealthCheckResponse_SERVING_NOT_CONNECTED
 			defer func(conn *grpc.ClientConn) {
 				wg.Done()
 				err = conn.Close()
@@ -222,7 +235,7 @@ func (n *Node) LookUp(ctx context.Context) {
 
 func (n *Node) communicateByStream(
 	ctx context.Context,
-	client serviceGrpc.NodeClient,
+	client grpcApi.NodeClient,
 	serviceID string,
 ) {
 	stream, err := client.SendStream(ctx)
@@ -250,7 +263,7 @@ func (n *Node) communicateByStream(
 		}
 	}()
 	for _, message := range utils.GetRandStrings(2, 15) {
-		m := &serviceGrpc.Message{
+		m := &grpcApi.Message{
 			Name:    n.ID,
 			Message: message,
 		}
@@ -270,10 +283,10 @@ func (n *Node) communicateByStream(
 
 func (n *Node) communicate(
 	ctx context.Context,
-	client serviceGrpc.NodeClient,
+	client grpcApi.NodeClient,
 	serviceID string,
 ) {
-	m := &serviceGrpc.Message{
+	m := &grpcApi.Message{
 		Name:    n.ID,
 		Message: utils.RandStringBytesMask(15),
 	}
@@ -288,8 +301,8 @@ func (n *Node) communicate(
 	log.Info(fmt.Sprintf("Client: receive %s from %s", responseMessage.Message, responseMessage.Name))
 }
 
-func (n *Node) connected(ctx context.Context, client serviceGrpc.NodeClient) bool {
-	resp, err := client.Connected(ctx, &serviceGrpc.HealthCheckRequest{Node: n.ID})
+func (n *Node) connected(ctx context.Context, client grpcApi.NodeClient) bool {
+	resp, err := client.Connected(ctx, &grpcApi.HealthCheckRequest{Node: n.ID})
 	if resp == nil {
 		log.Error("Can not notify about connect")
 		return false
@@ -301,8 +314,8 @@ func (n *Node) connected(ctx context.Context, client serviceGrpc.NodeClient) boo
 	return resp.Ok
 }
 
-func (n *Node) disconnected(ctx context.Context, client serviceGrpc.NodeClient) {
-	resp, err := client.Disconnected(ctx, &serviceGrpc.HealthCheckRequest{Node: n.ID})
+func (n *Node) disconnected(ctx context.Context, client grpcApi.NodeClient) {
+	resp, err := client.Disconnected(ctx, &grpcApi.HealthCheckRequest{Node: n.ID})
 	if resp == nil || resp.Ok == false {
 		log.Error("Can not notify about disconnect")
 		return

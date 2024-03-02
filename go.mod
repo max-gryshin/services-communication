@@ -1,9 +1,10 @@
 module github.com/max-gryshin/services-communication
 
-go 1.21.6
+go 1.22.0
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	google.golang.org/grpc v1.51.0
 	google.golang.org/protobuf v1.32.0
 )

@@ -14,6 +14,11 @@ import (
 	"github.com/max-gryshin/services-communication/internal/utils"
 )
 
+const (
+	DevEnvironment  = "dev"
+	ProdEnvironment = "prod"
+)
+
 // App is a structure for storage app configuration
 type App struct {
 	LogOut          io.Writer
@@ -34,9 +39,11 @@ type ServerConfig struct {
 
 // Config is a structure for storage all settings
 type Config struct {
-	ServerConfig ServerConfig
-	Nodes        []string
-	App          App
+	ServerConfig                ServerConfig
+	Nodes                       []string
+	App                         App
+	Environment                 string
+	GracefullyShutdownTimeoutMs int
 }
 
 // New loads configuration from env variables
@@ -74,6 +81,8 @@ func New() *Config {
 			".",
 			serviceName,
 		},
+		Environment:                 DevEnvironment,
+		GracefullyShutdownTimeoutMs: 10000,
 	}
 
 	return &s
