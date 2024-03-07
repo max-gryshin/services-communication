@@ -1,14 +1,11 @@
 syntax = "proto3";
 
-// protoc --proto_path=grpc --go_out=. grpc/proto/service.proto
-// protoc --proto_path=grpc --go-grpc_out=. grpc/proto/service.proto
-
 package proto;
 
-option go_package = "/grpc";
+option go_package = "/api";
 
 message HealthCheckRequest {
-  string service = 1;
+  string node = 1;
 }
 
 message HealthCheckResponse {
@@ -22,7 +19,7 @@ message HealthCheckResponse {
 }
 
 message Message {
-  string ServiceName = 1;
+  string Name = 1;
   string message = 2;
 }
 
@@ -30,9 +27,9 @@ message ServeResponse {
   bool ok = 1;
 }
 
-service ServiceCommunicator {
-  rpc SendRandStringStream(stream Message) returns (stream Message) {}
-  rpc SendRandString(Message) returns (Message) {}
+service Node {
+  rpc SendStream(stream Message) returns (stream Message) {}
+  rpc Send(Message) returns (Message) {}
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
   rpc Connected(HealthCheckRequest) returns (ServeResponse);
   rpc Disconnected(HealthCheckRequest) returns (ServeResponse);

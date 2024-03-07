@@ -3,7 +3,7 @@ version: "3.9"
 services:
   node:
     build:
-      dockerfile: Dockerfile
+      dockerfile: ./build/Dockerfile
       context: ./
     image: "${APP_IMAGE}:${APP_IMAGE_TAG}"
     deploy:

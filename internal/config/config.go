@@ -1,4 +1,4 @@
-package setting
+package config
 
 import (
 	"fmt"
@@ -7,21 +7,27 @@ import (
 	"net"
 	"os"
 	"path/filepath"
-	"servicesCommunication/internal/file"
-	"servicesCommunication/internal/utils"
 	"strconv"
 	"time"
+
+	"github.com/max-gryshin/services-communication/internal/file"
+	"github.com/max-gryshin/services-communication/internal/utils"
+)
+
+const (
+	DevEnvironment  = "dev"
+	ProdEnvironment = "prod"
 )
 
 // App is a structure for storage app configuration
 type App struct {
 	LogOut          io.Writer
 	RuntimeRootPath string
-	ServiceName     string
+	Name            string
 }
 
-// ServerSetting is a structure for storage user_protobuf configuration
-type ServerSetting struct {
+// ServerConfig is a structure for storage user_protobuf configuration
+type ServerConfig struct {
 	RunMode                string
 	Port                   string
 	FrequencyCommunication time.Duration
@@ -31,28 +37,25 @@ type ServerSetting struct {
 	// Path string
 }
 
-type NodeSetting struct {
-	Host string
-	Port string
+// Config is a structure for storage all settings
+type Config struct {
+	ServerConfig                ServerConfig
+	Nodes                       []string
+	App                         App
+	Environment                 string
+	GracefullyShutdownTimeoutMs int
 }
 
-// Setting is a structure for storage all settings
-type Setting struct {
-	ServerConfig ServerSetting
-	Nodes        []string
-	App          App
-}
-
-// NewSetting loads configuration from env variables
-func NewSetting() *Setting {
-	nodeCount, _ := strconv.Atoi(getEnv("NODE_COUNT"))
+// New loads configuration from env variables
+func New() *Config {
+	nodeCount, _ := strconv.Atoi(getEnv("NODE_COUNT", "1"))
 	nodeNames := make([]string, 0, nodeCount-1)
-	port := getEnv("APP_PORT")
+	port := getEnv("APP_PORT", "")
 	var serviceName string
 	// need a time to set up another nodes
 	time.Sleep(time.Second * time.Duration(nodeCount))
 	for i := 1; i <= nodeCount; i++ {
-		nodeName := fmt.Sprintf("%s%d:%s", getEnv("APP_SERVICE"), i, port)
+		nodeName := fmt.Sprintf("%s%d:%s", getEnv("APP_SERVICE", ""), i, port)
 		tcpAddr, err := net.ResolveTCPAddr("tcp", nodeName)
 		if err != nil {
 			fmt.Println(err)
@@ -65,8 +68,8 @@ func NewSetting() *Setting {
 		}
 	}
 
-	s := Setting{
-		ServerConfig: ServerSetting{
+	s := Config{
+		ServerConfig: ServerConfig{
 			Port:                   port,
 			FrequencyCommunication: time.Second * utils.GetRandDuration(1, 3),
 			Timeout:                time.Second * 3,
@@ -78,26 +81,28 @@ func NewSetting() *Setting {
 			".",
 			serviceName,
 		},
+		Environment:                 DevEnvironment,
+		GracefullyShutdownTimeoutMs: 10000,
 	}
 
 	return &s
 }
 
 // Simple helper function to read an environment or return a default value
-func getEnv(key string) string {
+func getEnv(key string, def string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
 
-	return ""
+	return def
 }
 
 func getFileLog() io.Writer {
-	filePath := filepath.Join(".", getEnv("LOG_PATH"))
-	fileName := getEnv("LOG_NAME") + "." + getEnv("LOG_EXT")
+	filePath := filepath.Join(".", getEnv("LOG_PATH", ""))
+	fileName := getEnv("LOG_NAME", "") + "." + getEnv("LOG_EXT", "")
 	f, err := file.MustOpen(fileName, filePath)
 	if err != nil {
-		log.Fatalf("grpclog.Setup err: %v", err)
+		log.Fatalf("log.Setup err: %v", err)
 	}
 
 	return f

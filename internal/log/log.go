@@ -1,12 +1,13 @@
-package grpclog
+package log
 
 import (
 	"fmt"
 	"log"
 	"os"
 	"runtime"
-	"servicesCommunication/internal/setting"
 	"time"
+
+	"github.com/max-gryshin/services-communication/internal/config"
 )
 
 type Level int
@@ -31,7 +32,7 @@ const (
 )
 
 // Setup initialize the log instance
-func Setup(config *setting.App) {
+func Setup(config *config.App) {
 	logger = log.New(config.LogOut, DefaultPrefix, log.LstdFlags)
 }
 
