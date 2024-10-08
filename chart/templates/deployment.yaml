@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: api
+    tier: backend
+  name: api
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+        tier: backend
+      namespace: {{ .Values.namespace }}
+      annotations:
+        redeployTimestamp: "{{ now | unixEpoch }}"
+    spec:
+      containers:
+        - name: api
+          args:
+            - "-config"
+            - "/opt/api/configs/common-config.yml"
+          command:
+            - "/app/bin"
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            requests:
+              memory: 128Mi
+              cpu: 150m
+            limits:
+              memory: 512Mi
+              cpu: "4"
+          ports:
+            - containerPort: 8000
+            - containerPort: 10000
+            - containerPort: 9808
+          livenessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            tcpSocket:
+              port: 8000
+          readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            tcpSocket:
+              port: 8000
+          volumeMounts:
+            - mountPath: "/opt/api/configs"
+              name: api
+              readOnly: true
+      imagePullSecrets:
+        - name: registry-auth
+      volumes:
+        - name: api
+          secret:
+            items:
+              - key: common-config
+                path: common-config.yml
+            secretName: api-secrets

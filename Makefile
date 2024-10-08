@@ -38,3 +38,18 @@ gen-proto:
 	#go install google.golang.org/api/cmd/protoc-gen-go-api@v1.2 && \
 	cd ./api/ && \
 	protoc --go_out=../ --go-grpc_out=../ proto/node.proto
+
+deploy:
+	@echo 'deploy app'
+	helm dependency build chart
+	helm upgrade services-communication ./chart \
+ 	--install \
+ 	-n ${K8S_NAMESPACE} \
+ 	--create-namespace \
+	--debug \
+	--wait \
+	--timeout 300s \
+	--atomic \
+	-f chart/values.yaml \
+	--set      image.repository="${APP_IMAGE}" \
+	--set      image.tag="${APP_IMAGE_TAG}" \

@@ -1,0 +1,7 @@
+logLevel: "debug"
+namespace: "service-communication-test"
+image:
+  repository: "services-communication:latest"
+  tag: "latest"
+  pullPolicy: "IfNotPresent"
+environment: "debug"

@@ -1,4 +1,4 @@
-FROM golang:1.320.3 AS builder
+FROM golang:1.23.2 AS builder
 ARG OUTPUT_BINARY
 ARG APP_VERSION
 ARG BUILD_DIR
